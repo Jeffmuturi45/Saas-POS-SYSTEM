@@ -1,0 +1,226 @@
+<!-- templates/business_admin/notifications.html -->
+{% extends 'business_admin/base.html' %}
+{% load static %}
+
+{% block title %}Notifications - {{ business.name }}{% endblock %}
+
+{% block page_title %}Notifications{% endblock %}
+{% block page_subtitle %}View all system notifications{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-bell me-2"></i>All Notifications</h5>
+                <div>
+                    <button class="btn btn-light btn-sm me-2" id="markAllRead">
+                        <i class="fas fa-check-double me-1"></i>Mark All Read
+                    </button>
+                    <button class="btn btn-light btn-sm" id="clearAll">
+                        <i class="fas fa-trash me-1"></i>Clear All
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="notifications-list">
+                    {% for notification in notifications %}
+                    <div class="notification-item {% if not notification.is_read %}unread{% endif %}" 
+                         data-id="{{ notification.id }}">
+                        <div class="notification-icon">
+                            <i class="fas fa-{{ notification.icon_class }} text-{{ notification.color_class }}"></i>
+                        </div>
+                        <div class="notification-content">
+                            <div class="notification-header">
+                                <h6 class="mb-1">{{ notification.title }}</h6>
+                                <div class="notification-actions">
+                                    {% if not notification.is_read %}
+                                    <button class="btn btn-sm btn-outline-success mark-read" title="Mark as read">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    {% endif %}
+                                    <button class="btn btn-sm btn-outline-danger delete-notification" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <p class="mb-2">{{ notification.message }}</p>
+                            <div class="d-flex justify-content-between">
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>{{ notification.created_at|timesince }} ago
+                                </small>
+                                <small class="text-muted">
+                                    <i class="fas fa-user-shield me-1"></i>From: System Admin
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+                        <h5>No notifications</h5>
+                        <p class="text-muted">You're all caught up!</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Pagination -->
+                {% if notifications.has_other_pages %}
+                <nav aria-label="Notification pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if notifications.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ notifications.previous_page_number }}">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in notifications.paginator.page_range %}
+                            {% if notifications.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                            {% elif num > notifications.number|add:'-3' and num < notifications.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if notifications.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ notifications.next_page_number }}">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .notification-item {
+        display: flex;
+        padding: 20px;
+        border-bottom: 1px solid #dee2e6;
+        transition: background-color 0.3s;
+    }
+    
+    .notification-item.unread {
+        background-color: rgba(0, 123, 255, 0.05);
+        border-left: 3px solid var(--primary-color);
+    }
+    
+    .notification-item:hover {
+        background-color: rgba(0, 0, 0, 0.02);
+    }
+    
+    .notification-item:last-child {
+        border-bottom: none;
+    }
+    
+    .notification-icon {
+        width: 50px;
+        height: 50px;
+        background: #f8f9fa;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 20px;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+    
+    .notification-content {
+        flex: 1;
+    }
+    
+    .notification-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 10px;
+    }
+    
+    .notification-actions {
+        display: flex;
+        gap: 5px;
+    }
+    
+    .notification-actions .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Mark notification as read
+        document.querySelectorAll('.mark-read').forEach(button => {
+            button.addEventListener('click', function() {
+                const notificationItem = this.closest('.notification-item');
+                const notificationId = notificationItem.getAttribute('data-id');
+                
+                // Send request to mark as read
+                fetch(`/accounts/api/notification/${notificationId}/mark-read/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        notificationItem.classList.remove('unread');
+                        this.remove();
+                        updateNotificationBadge();
+                    }
+                });
+            });
+        });
+        
+        // Delete notification
+        document.querySelectorAll('.delete-notification').forEach(button => {
+            button.addEventListener('click', function() {
+                const notificationItem = this.closest('.notification-item');
+                const notificationId = notificationItem.getAttribute('data-id');
+                
+                if (confirm('Delete this notification?')) {
+                    fetch(`/accounts/api/notification/${notificationId}/delete/`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRFToken': getCookie('csrftoken')
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.success) {
+                            notificationItem.remove();
+                            updateNotificationBadge();
+                            
+                            // If no notifications left, show empty state
+                            if (!document.querySelector('.notification-item')) {
+                                document.querySelector('.notifications-list').innerHTML = `
+                                    <div class="text-center py-5">
+                                        <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+                                        <h5>No notifications</h5>
+                                        <p class="text-muted">You're all caught up!</p>
+                                    </div>
+                                `;
+                            }
+                        }
+                    });
+                }
+            });
+        });
+        
+        // Mark all as read
+        document.getElementById('markAllRead').addEventListener('click', function() {
+            if

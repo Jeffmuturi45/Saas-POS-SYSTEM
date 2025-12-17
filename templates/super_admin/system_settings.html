@@ -1,0 +1,382 @@
+<!-- templates/super_admin/system_settings.html -->
+{% extends 'super_admin/base.html' %}
+{% load static %}
+
+{% block title %}System Settings - Super Admin{% endblock %}
+
+{% block page_title %}System Settings{% endblock %}
+{% block page_subtitle %}Configure system-wide settings and parameters{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-sliders-h me-2"></i>General Settings</h5>
+            </div>
+            <div class="card-body">
+                <form id="systemSettingsForm">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">System Name</label>
+                                <input type="text" class="form-control" name="system_name" value="SaaS POS System">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Default Currency</label>
+                                <select class="form-select" name="default_currency">
+                                    <option value="KES" selected>Kenyan Shilling (KES)</option>
+                                    <option value="USD">US Dollar (USD)</option>
+                                    <option value="EUR">Euro (EUR)</option>
+                                    <option value="GBP">British Pound (GBP)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Default Timezone</label>
+                                <select class="form-select" name="default_timezone">
+                                    <option value="Africa/Nairobi" selected>Africa/Nairobi (EAT)</option>
+                                    <option value="UTC">UTC</option>
+                                    <option value="America/New_York">America/New_York</option>
+                                    <option value="Europe/London">Europe/London</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Date Format</label>
+                                <select class="form-select" name="date_format">
+                                    <option value="Y-m-d">YYYY-MM-DD</option>
+                                    <option value="d/m/Y">DD/MM/YYYY</option>
+                                    <option value="m/d/Y">MM/DD/YYYY</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Session Timeout (minutes)</label>
+                                <input type="number" class="form-control" name="session_timeout" value="30" min="5" max="480">
+                                <small class="text-muted">User session timeout in minutes</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Items Per Page</label>
+                                <input type="number" class="form-control" name="items_per_page" value="20" min="5" max="100">
+                                <small class="text-muted">Default items per page in tables</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <h5><i class="fas fa-shield-alt me-2"></i>Security Settings</h5>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" name="enable_2fa" id="enable2FA">
+                                <label class="form-check-label" for="enable2FA">Enable Two-Factor Authentication</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" name="force_ssl" id="forceSSL" checked>
+                                <label class="form-check-label" for="forceSSL">Force SSL/HTTPS</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" name="enable_audit_log" id="enableAuditLog" checked>
+                                <label class="form-check-label" for="enableAuditLog">Enable Audit Logging</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" name="enable_ip_restriction" id="enableIPRestriction">
+                                <label class="form-check-label" for="enableIPRestriction">Enable IP Restrictions</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <h5><i class="fas fa-credit-card me-2"></i>Payment Settings</h5>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">M-PESA API Key</label>
+                                <input type="password" class="form-control" name="mpesa_api_key" placeholder="Enter M-PESA API Key">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">M-PESA Short Code</label>
+                                <input type="text" class="form-control" name="mpesa_shortcode" placeholder="Enter M-PESA Short Code">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Default Payment Method</label>
+                                <select class="form-select" name="default_payment_method">
+                                    <option value="MPESA" selected>M-PESA</option>
+                                    <option value="CASH">Cash</option>
+                                    <option value="CARD">Card</option>
+                                    <option value="BANK_TRANSFER">Bank Transfer</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Payment Gateway Mode</label>
+                                <select class="form-select" name="payment_gateway_mode">
+                                    <option value="sandbox">Sandbox/Test</option>
+                                    <option value="live">Live/Production</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <h5><i class="fas fa-envelope me-2"></i>Email Settings</h5>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">SMTP Server</label>
+                                <input type="text" class="form-control" name="smtp_server" value="smtp.gmail.com">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">SMTP Port</label>
+                                <input type="number" class="form-control" name="smtp_port" value="587">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">SMTP Username</label>
+                                <input type="text" class="form-control" name="smtp_username" placeholder="Enter SMTP username">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">SMTP Password</label>
+                                <input type="password" class="form-control" name="smtp_password" placeholder="Enter SMTP password">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-secondary me-2" id="resetSettings">
+                            <i class="fas fa-redo me-2"></i>Reset to Default
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Save Settings
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>System Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="system-info-item mb-3">
+                    <small class="text-muted">System Version</small>
+                    <div class="fw-bold">v1.0.0</div>
+                </div>
+                <div class="system-info-item mb-3">
+                    <small class="text-muted">Last Updated</small>
+                    <div class="fw-bold">{{ current_date|date:"F d, Y" }}</div>
+                </div>
+                <div class="system-info-item mb-3">
+                    <small class="text-muted">Database Size</small>
+                    <div class="fw-bold">{{ db_size|default:"0" }} MB</div>
+                </div>
+                <div class="system-info-item mb-3">
+                    <small class="text-muted">Active Businesses</small>
+                    <div class="fw-bold">{{ active_businesses_count }}</div>
+                </div>
+                <div class="system-info-item mb-3">
+                    <small class="text-muted">Total Users</small>
+                    <div class="fw-bold">{{ total_users_count }}</div>
+                </div>
+                <div class="system-info-item">
+                    <small class="text-muted">System Status</small>
+                    <div>
+                        <span class="badge bg-success">Online</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header bg-warning text-white">
+                <h5 class="mb-0"><i class="fas fa-tools me-2"></i>Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <a href="{% url 'manage_businesses' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-sync-alt me-2"></i>Refresh Business Data
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action" id="clearCacheBtn">
+                        <i class="fas fa-broom me-2"></i>Clear System Cache
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action" id="backupSystemBtn">
+                        <i class="fas fa-database me-2"></i>Backup Database
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action" id="systemLogsBtn">
+                        <i class="fas fa-file-alt me-2"></i>View System Logs
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-check-input:checked {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    
+    .system-info-item {
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 10px;
+    }
+    
+    .system-info-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Load saved settings
+        function loadSettings() {
+            const savedSettings = localStorage.getItem('systemSettings');
+            if (savedSettings) {
+                try {
+                    const settings = JSON.parse(savedSettings);
+                    const form = document.getElementById('systemSettingsForm');
+                    
+                    for (const [key, value] of Object.entries(settings)) {
+                        const input = form.querySelector(`[name="${key}"]`);
+                        if (input) {
+                            if (input.type === 'checkbox') {
+                                input.checked = value;
+                            } else {
+                                input.value = value;
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error loading settings:', e);
+                }
+            }
+        }
+        
+        // Save settings
+        document.getElementById('systemSettingsForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const settings = {};
+            
+            for (const [key, value] of formData.entries()) {
+                settings[key] = value;
+            }
+            
+            // Save to localStorage (in production, save to server)
+            localStorage.setItem('systemSettings', JSON.stringify(settings));
+            
+            showToast('Settings saved successfully!', 'success');
+        });
+        
+        // Reset settings
+        document.getElementById('resetSettings').addEventListener('click', function() {
+            if (confirm('Reset all settings to default values?')) {
+                localStorage.removeItem('systemSettings');
+                document.getElementById('systemSettingsForm').reset();
+                showToast('Settings reset to default', 'info');
+            }
+        });
+        
+        // Quick actions
+        document.getElementById('clearCacheBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            if (confirm('Clear system cache?')) {
+                // In production, make API call
+                showToast('System cache cleared', 'success');
+            }
+        });
+        
+        document.getElementById('backupSystemBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            if (confirm('Create system backup? This may take a few moments.')) {
+                // In production, make API call
+                showToast('System backup initiated...', 'info');
+            }
+        });
+        
+        document.getElementById('systemLogsBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            window.open('/superadmin/system-logs/', '_blank');
+        });
+        
+        // Initialize
+        loadSettings();
+        
+        // Toast notification
+        function showToast(message, type = 'info') {
+            const toastId = 'toast-' + Date.now();
+            const toastHtml = `
+                <div id="${toastId}" class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+                    <div class="toast show" role="alert">
+                        <div class="toast-header bg-${type} text-white">
+                            <strong class="me-auto">${type.charAt(0).toUpperCase() + type.slice(1)}</strong>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                        </div>
+                        <div class="toast-body">
+                            ${message}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', toastHtml);
+            
+            setTimeout(() => {
+                const toast = document.getElementById(toastId);
+                if (toast) toast.remove();
+            }, 5000);
+        }
+    });
+</script>
+{% endblock %}

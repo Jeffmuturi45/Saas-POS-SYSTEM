@@ -1,0 +1,516 @@
+<!-- templates/super_admin/dashboard.html -->
+{% extends 'super_admin/base.html' %}
+{% load static %}
+
+{% block title %}Super Admin Dashboard - SaaS POS{% endblock %}
+
+{% block page_title %}Super Admin Dashboard{% endblock %}
+{% block page_subtitle %}System Overview & Management{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Stats Cards -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Total Businesses
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="businessesCount">
+                            {{ businesses_count|default:"0" }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-building fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Active Users
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="usersCount">
+                            {{ users_count|default:"0" }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Active Licenses
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="licensesCount">
+                            {{ active_licenses|default:"0" }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-key fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Revenue (This Month)
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="revenueCount">
+                            Ksh{{ monthly_revenue|default:"0"|floatformat:2 }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row">
+    <!-- Revenue Chart -->
+    <div class="col-xl-8 col-lg-7">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Monthly Revenue Overview</h6>
+                <div class="dropdown no-arrow">
+                    <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" 
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow animated--fade-in" 
+                        aria-labelledby="dropdownMenuLink">
+                        <li><a class="dropdown-item" href="#">This Year</a></li>
+                        <li><a class="dropdown-item" href="#">Last Year</a></li>
+                        <li><div class="dropdown-divider"></div></li>
+                        <li><a class="dropdown-item" href="#">Export Data</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="chart-area">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Business Types Chart -->
+    <div class="col-xl-4 col-lg-5">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Business Types Distribution</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-pie pt-4">
+                    <canvas id="businessTypesChart"></canvas>
+                </div>
+                <div class="mt-4 text-center small">
+                    {% for type in business_types %}
+                    <span class="mr-2">
+                        <i class="fas fa-circle" style="color: {{ type.color }}"></i> {{ type.name }}
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activities & Businesses Tables -->
+<div class="row">
+    <!-- Recent Businesses -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Recently Registered Businesses</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="recentBusinessesTable">
+                        <thead>
+                            <tr>
+                                <th>Business Name</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>License</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for business in recent_businesses %}
+                            <tr>
+                                <td>
+                                    <strong>{{ business.name }}</strong><br>
+                                    <small class="text-muted">{{ business.email }}</small>
+                                </td>
+                                <td>{{ business.get_business_type_display }}</td>
+                                <td>
+                                    <span class="badge badge-{% if business.status == 'ACTIVE' %}success{% elif business.status == 'PENDING' %}warning{% else %}danger{% endif %}">
+                                        {{ business.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-{% if business.license.tier == 'ENTERPRISE' %}danger{% elif business.license.tier == 'PRO' %}warning{% elif business.license.tier == 'BASIC' %}info{% else %}secondary{% endif %}">
+                                        {{ business.license.get_tier_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="#" class="btn btn-sm btn-outline-primary" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="#" class="btn btn-sm btn-outline-warning" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center">No businesses registered yet</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <a href="#" class="btn btn-outline-primary btn-sm float-right">View All Businesses</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Activities -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Recent System Activities</h6>
+                <a href="#" class="btn btn-sm btn-outline-primary">View Logs</a>
+            </div>
+            <div class="card-body">
+                <div class="activity-feed">
+                    {% for activity in recent_activities %}
+                    <div class="feed-item mb-3">
+                        <div class="feed-icon">
+                            <i class="fas fa-{{ activity.icon }} text-{{ activity.color }}"></i>
+                        </div>
+                        <div class="feed-content">
+                            <div class="feed-text">{{ activity.text }}</div>
+                            <div class="feed-time text-muted">
+                                <small>{{ activity.time }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center text-muted py-3">No recent activities</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- License Status Overview -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">License Status Overview</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        <div class="license-status-card active">
+                            <h3>{{ license_stats.active }}</h3>
+                            <p>Active</p>
+                            <div class="progress">
+                                <div class="progress-bar bg-success" style="width: {{ license_stats.active_percentage }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="license-status-card expired">
+                            <h3>{{ license_stats.expired }}</h3>
+                            <p>Expired</p>
+                            <div class="progress">
+                                <div class="progress-bar bg-danger" style="width: {{ license_stats.expired_percentage }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="license-status-card demo">
+                            <h3>{{ license_stats.demo }}</h3>
+                            <p>Demo</p>
+                            <div class="progress">
+                                <div class="progress-bar bg-warning" style="width: {{ license_stats.demo_percentage }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="license-status-card expiring">
+                            <h3>{{ license_stats.expiring_soon }}</h3>
+                            <p>Expiring Soon</p>
+                            <div class="progress">
+                                <div class="progress-bar bg-info" style="width: {{ license_stats.expiring_percentage }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border-radius: 10px;
+        border: none;
+        transition: transform 0.3s ease;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .border-left-primary {
+        border-left: 4px solid #4e73df !important;
+    }
+    
+    .border-left-success {
+        border-left: 4px solid #1cc88a !important;
+    }
+    
+    .border-left-info {
+        border-left: 4px solid #36b9cc !important;
+    }
+    
+    .border-left-warning {
+        border-left: 4px solid #f6c23e !important;
+    }
+    
+    .chart-area, .chart-pie {
+        position: relative;
+        height: 300px;
+    }
+    
+    .activity-feed .feed-item {
+        display: flex;
+        align-items: flex-start;
+        padding: 10px 0;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .activity-feed .feed-item:last-child {
+        border-bottom: none;
+    }
+    
+    .feed-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #f8f9fc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+    }
+    
+    .feed-content {
+        flex: 1;
+    }
+    
+    .feed-text {
+        font-size: 0.9rem;
+        color: #5a5c69;
+    }
+    
+    .feed-time {
+        font-size: 0.8rem;
+    }
+    
+    .license-status-card {
+        padding: 20px;
+        border-radius: 10px;
+        background: #f8f9fc;
+        transition: all 0.3s ease;
+    }
+    
+    .license-status-card:hover {
+        background: #e9ecef;
+        transform: scale(1.05);
+    }
+    
+    .license-status-card h3 {
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+    
+    .license-status-card p {
+        margin-bottom: 10px;
+        color: #6c757d;
+    }
+    
+    .progress {
+        height: 8px;
+        border-radius: 4px;
+        background: #e9ecef;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-hide success messages after 5 seconds
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert-success, .alert-info');
+            alerts.forEach(alert => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+        
+        // Revenue Chart
+        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+        const revenueChart = new Chart(revenueCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                datasets: [{
+                    label: 'Revenue (Ksh)',
+                    data: [12000, 19000, 15000, 25000, 22000, 30000, 28000, 35000, 30000, 40000, 38000, 45000],
+                    borderColor: '#4e73df',
+                    backgroundColor: 'rgba(78, 115, 223, 0.05)',
+                    pointBackgroundColor: '#4e73df',
+                    pointBorderColor: '#4e73df',
+                    pointRadius: 3,
+                    pointHoverRadius: 5,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            borderDash: [2],
+                            drawBorder: false
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Business Types Chart
+        const businessTypesCtx = document.getElementById('businessTypesChart').getContext('2d');
+        const businessTypesChart = new Chart(businessTypesCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Retail', 'Restaurant', 'Service', 'Wholesale', 'Other'],
+                datasets: [{
+                    data: [35, 25, 20, 15, 5],
+                    backgroundColor: [
+                        '#4e73df',
+                        '#1cc88a',
+                        '#36b9cc',
+                        '#f6c23e',
+                        '#e74a3b'
+                    ],
+                    hoverBackgroundColor: [
+                        '#2e59d9',
+                        '#17a673',
+                        '#2c9faf',
+                        '#dda20a',
+                        '#be2617'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+        
+        // Animated counters
+        function animateCounter(element, target, duration = 2000) {
+            const start = parseInt(element.innerText) || 0;
+            const increment = target / (duration / 16);
+            let current = start;
+            
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    element.innerText = target.toLocaleString();
+                    clearInterval(timer);
+                } else {
+                    element.innerText = Math.floor(current).toLocaleString();
+                }
+            }, 16);
+        }
+        
+        // Start counters when in view
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const id = entry.target.id;
+                    const target = parseInt(entry.target.dataset.target) || 0;
+                    animateCounter(entry.target, target);
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.5 });
+        
+        // Observe counter elements
+        document.querySelectorAll('[id$="Count"]').forEach(el => {
+            const target = parseInt(el.innerText.replace(/[^0-9]/g, '')) || 0;
+            el.dataset.target = target;
+            el.innerText = '0';
+            observer.observe(el);
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,25 @@
+<!-- templates/accounts/profile.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Profile - SaaS POS{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4>User Profile</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        Profile page will be implemented later.
+                    </div>
+                    <a href="{% url 'dashboard' %}" class="btn btn-primary">Back to Dashboard</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,33 @@
+<!-- templates/cashier/dashboard.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Cashier Dashboard - SaaS POS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mt-4">
+                <div class="card-header bg-info text-white">
+                    <h4><i class="fas fa-cash-register me-2"></i>Cashier Dashboard</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-secondary">
+                        <h5>Welcome, {{ user.username }}!</h5>
+                        <p>You are working at: <strong>{{ user.business.name|default:"No Business Assigned" }}</strong></p>
+                        <p>License Tier: <span class="badge bg-secondary">{{ user.license_tier }}</span></p>
+                        <p>Role: <span class="badge bg-info">{{ user.role }}</span></p>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <a href="{% url 'logout' %}" class="btn btn-outline-danger">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

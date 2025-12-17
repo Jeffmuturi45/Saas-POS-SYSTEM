@@ -1,0 +1,491 @@
+<!-- templates/super_admin/themes.html -->
+{% extends 'super_admin/base.html' %}
+{% load static %}
+
+{% block title %}Theme Customization - Super Admin{% endblock %}
+
+{% block page_title %}Theme Customization{% endblock %}
+{% block page_subtitle %}Customize system colors and appearance{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-palette me-2"></i>Color Theme Settings</h5>
+            </div>
+            <div class="card-body">
+                <form id="themeForm">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Primary Color</label>
+                                <div class="input-group colorpicker">
+                                    <input type="text" class="form-control" id="primaryColor" value="#4361ee">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-square" style="color: #4361ee"></i>
+                                    </span>
+                                </div>
+                                <small class="text-muted">Main brand color used throughout the system</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Secondary Color</label>
+                                <div class="input-group colorpicker">
+                                    <input type="text" class="form-control" id="secondaryColor" value="#3f37c9">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-square" style="color: #3f37c9"></i>
+                                    </span>
+                                </div>
+                                <small class="text-muted">Secondary color for buttons and highlights</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">Success Color</label>
+                                <div class="input-group colorpicker">
+                                    <input type="text" class="form-control" id="successColor" value="#4cc9f0">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-square" style="color: #4cc9f0"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">Danger Color</label>
+                                <div class="input-group colorpicker">
+                                    <input type="text" class="form-control" id="dangerColor" value="#f72585">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-square" style="color: #f72585"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">Warning Color</label>
+                                <div class="input-group colorpicker">
+                                    <input type="text" class="form-control" id="warningColor" value="#f8961e">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-square" style="color: #f8961e"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Sidebar Background</label>
+                                <div class="input-group colorpicker">
+                                    <input type="text" class="form-control" id="sidebarBg" value="#1a237e">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-square" style="color: #1a237e"></i>
+                                    </span>
+                                </div>
+                                <small class="text-muted">Background color for the sidebar</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Sidebar Text Color</label>
+                                <div class="input-group colorpicker">
+                                    <input type="text" class="form-control" id="sidebarText" value="#ffffff">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-square" style="color: #ffffff"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-label">Custom CSS</label>
+                                <textarea class="form-control" id="customCSS" rows="6" placeholder="Enter custom CSS rules..."></textarea>
+                                <small class="text-muted">Add additional CSS rules for further customization</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <button type="button" class="btn btn-secondary" id="resetTheme">
+                            <i class="fas fa-redo me-2"></i>Reset to Default
+                        </button>
+                        <div>
+                            <button type="button" class="btn btn-outline-primary me-2" id="previewTheme">
+                                <i class="fas fa-eye me-2"></i>Preview
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-eye-dropper me-2"></i>Theme Preview</h5>
+            </div>
+            <div class="card-body">
+                <div class="theme-preview">
+                    <div class="preview-sidebar" style="background: #1a237e; color: #ffffff;">
+                        <div class="preview-sidebar-header">
+                            <i class="fas fa-crown"></i>
+                            <span>Super Admin</span>
+                        </div>
+                        <div class="preview-sidebar-menu">
+                            <div class="preview-menu-item active" style="background: rgba(255, 255, 255, 0.1);">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>Dashboard</span>
+                            </div>
+                            <div class="preview-menu-item">
+                                <i class="fas fa-building"></i>
+                                <span>Businesses</span>
+                            </div>
+                            <div class="preview-menu-item">
+                                <i class="fas fa-users"></i>
+                                <span>Users</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="preview-content">
+                        <div class="preview-topbar" style="background: #ffffff;">
+                            <div class="preview-title">
+                                <h6>Dashboard</h6>
+                            </div>
+                        </div>
+                        <div class="preview-main">
+                            <div class="preview-card" style="border-left: 4px solid #4361ee;">
+                                <div class="preview-card-body">
+                                    <h5>123</h5>
+                                    <small>Total Businesses</small>
+                                </div>
+                            </div>
+                            <div class="preview-card" style="border-left: 4px solid #4cc9f0;">
+                                <div class="preview-card-body">
+                                    <h5>456</h5>
+                                    <small>Active Users</small>
+                                </div>
+                            </div>
+                            <button class="preview-btn" style="background: #4361ee; color: white;">Primary Button</button>
+                            <button class="preview-btn" style="background: #4cc9f0; color: white;">Success Button</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Quick Tips</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6><i class="fas fa-paint-brush text-primary me-2"></i>Color Selection</h6>
+                    <p class="small text-muted">Choose colors that provide good contrast for readability.</p>
+                </div>
+                
+                <div class="mb-3">
+                    <h6><i class="fas fa-mobile-alt text-info me-2"></i>Responsive Design</h6>
+                    <p class="small text-muted">All themes are automatically responsive across devices.</p>
+                </div>
+                
+                <div class="mb-3">
+                    <h6><i class="fas fa-sync-alt text-warning me-2"></i>Real-time Preview</h6>
+                    <p class="small text-muted">Changes are previewed instantly as you adjust colors.</p>
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Note:</strong> Theme changes apply system-wide for all users.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .colorpicker .input-group-text {
+        cursor: pointer;
+        width: 40px;
+        justify-content: center;
+    }
+    
+    .theme-preview {
+        display: flex;
+        height: 300px;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .preview-sidebar {
+        width: 30%;
+        padding: 15px;
+    }
+    
+    .preview-sidebar-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 20px;
+        font-weight: bold;
+    }
+    
+    .preview-sidebar-menu {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .preview-menu-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+    
+    .preview-menu-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .preview-content {
+        flex: 1;
+        background: #f8f9fa;
+    }
+    
+    .preview-topbar {
+        padding: 15px;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .preview-main {
+        padding: 15px;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    
+    .preview-card {
+        background: white;
+        padding: 15px;
+        border-radius: 6px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .preview-btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Color pickers
+        const colorInputs = document.querySelectorAll('.colorpicker input');
+        
+        colorInputs.forEach(input => {
+            const previewIcon = input.nextElementSibling.querySelector('i');
+            
+            // Update icon color when input changes
+            input.addEventListener('input', function() {
+                previewIcon.style.color = this.value;
+                updatePreview();
+            });
+            
+            // Make icon clickable to show color picker
+            previewIcon.addEventListener('click', function() {
+                input.click();
+            });
+        });
+        
+        // Theme form
+        const themeForm = document.getElementById('themeForm');
+        const resetThemeBtn = document.getElementById('resetTheme');
+        const previewThemeBtn = document.getElementById('previewTheme');
+        
+        // Update preview
+        function updatePreview() {
+            const primaryColor = document.getElementById('primaryColor').value;
+            const secondaryColor = document.getElementById('secondaryColor').value;
+            const successColor = document.getElementById('successColor').value;
+            const sidebarBg = document.getElementById('sidebarBg').value;
+            const sidebarText = document.getElementById('sidebarText').value;
+            
+            // Update preview elements
+            document.querySelector('.preview-sidebar').style.background = sidebarBg;
+            document.querySelector('.preview-sidebar').style.color = sidebarText;
+            document.querySelector('.preview-card:nth-child(1)').style.borderLeftColor = primaryColor;
+            document.querySelector('.preview-card:nth-child(2)').style.borderLeftColor = successColor;
+            document.querySelector('.preview-btn:nth-child(3)').style.background = primaryColor;
+            document.querySelector('.preview-btn:nth-child(4)').style.background = successColor;
+        }
+        
+        // Reset to default
+        resetThemeBtn.addEventListener('click', function() {
+            const defaultColors = {
+                'primaryColor': '#4361ee',
+                'secondaryColor': '#3f37c9',
+                'successColor': '#4cc9f0',
+                'dangerColor': '#f72585',
+                'warningColor': '#f8961e',
+                'sidebarBg': '#1a237e',
+                'sidebarText': '#ffffff',
+                'customCSS': ''
+            };
+            
+            for (const [id, value] of Object.entries(defaultColors)) {
+                const input = document.getElementById(id);
+                if (input) {
+                    input.value = value;
+                    const previewIcon = input.nextElementSibling?.querySelector('i');
+                    if (previewIcon) {
+                        previewIcon.style.color = value;
+                    }
+                }
+            }
+            
+            updatePreview();
+        });
+        
+        // Preview theme
+        previewThemeBtn.addEventListener('click', function() {
+            // Apply theme to current page for preview
+            const root = document.documentElement;
+            root.style.setProperty('--primary-color', document.getElementById('primaryColor').value);
+            root.style.setProperty('--secondary-color', document.getElementById('secondaryColor').value);
+            root.style.setProperty('--success-color', document.getElementById('successColor').value);
+            root.style.setProperty('--danger-color', document.getElementById('dangerColor').value);
+            root.style.setProperty('--warning-color', document.getElementById('warningColor').value);
+            
+            // Show success message
+            showToast('Theme preview applied! Changes will revert on refresh.', 'info');
+        });
+        
+        // Save theme
+        themeForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const themeData = {
+                primary: document.getElementById('primaryColor').value,
+                secondary: document.getElementById('secondaryColor').value,
+                success: document.getElementById('successColor').value,
+                danger: document.getElementById('dangerColor').value,
+                warning: document.getElementById('warningColor').value,
+                sidebar_bg: document.getElementById('sidebarBg').value,
+                sidebar_text: document.getElementById('sidebarText').value,
+                custom_css: document.getElementById('customCSS').value
+            };
+            
+            // Save to localStorage for demo (in real app, save to server)
+            localStorage.setItem('customTheme', JSON.stringify(themeData));
+            
+            // Show success message
+            showToast('Theme saved successfully!', 'success');
+            
+            // Apply theme
+            applyCustomTheme();
+        });
+        
+        // Load saved theme
+        function loadSavedTheme() {
+            const savedTheme = localStorage.getItem('customTheme');
+            if (savedTheme) {
+                const theme = JSON.parse(savedTheme);
+                
+                for (const [key, value] of Object.entries(theme)) {
+                    const inputId = key === 'primary' ? 'primaryColor' :
+                                   key === 'secondary' ? 'secondaryColor' :
+                                   key === 'success' ? 'successColor' :
+                                   key === 'danger' ? 'dangerColor' :
+                                   key === 'warning' ? 'warningColor' :
+                                   key === 'sidebar_bg' ? 'sidebarBg' :
+                                   key === 'sidebar_text' ? 'sidebarText' :
+                                   key === 'custom_css' ? 'customCSS' : null;
+                    
+                    if (inputId) {
+                        const input = document.getElementById(inputId);
+                        if (input) {
+                            input.value = value;
+                            const previewIcon = input.nextElementSibling?.querySelector('i');
+                            if (previewIcon) {
+                                previewIcon.style.color = value;
+                            }
+                        }
+                    }
+                }
+                
+                updatePreview();
+            }
+        }
+        
+        // Apply custom theme to page
+        function applyCustomTheme() {
+            const savedTheme = localStorage.getItem('customTheme');
+            if (savedTheme) {
+                const theme = JSON.parse(savedTheme);
+                const root = document.documentElement;
+                
+                root.style.setProperty('--primary-color', theme.primary);
+                root.style.setProperty('--secondary-color', theme.secondary);
+                root.style.setProperty('--success-color', theme.success);
+                root.style.setProperty('--danger-color', theme.danger);
+                root.style.setProperty('--warning-color', theme.warning);
+                
+                // Apply custom CSS
+                if (theme.custom_css) {
+                    let styleTag = document.getElementById('customThemeStyle');
+                    if (!styleTag) {
+                        styleTag = document.createElement('style');
+                        styleTag.id = 'customThemeStyle';
+                        document.head.appendChild(styleTag);
+                    }
+                    styleTag.textContent = theme.custom_css;
+                }
+            }
+        }
+        
+        // Initialize
+        loadSavedTheme();
+        applyCustomTheme();
+        
+        // Toast notification function
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            toast.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999;';
+            toast.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                toast.remove();
+            }, 5000);
+        }
+    });
+</script>
+{% endblock %}

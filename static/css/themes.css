@@ -1,0 +1,104 @@
+/* static/css/themes.css */
+
+/* static/css/themes.css */
+:root {
+    /* Default theme colors */
+    --primary-color: #4361ee;
+    --secondary-color: #3f37c9;
+    --success-color: #4cc9f0;
+    --danger-color: #f72585;
+    --warning-color: #f8961e;
+    --info-color: #7209b7;
+    --sidebar-bg: #1a237e;
+    --sidebar-color: #ffffff;
+}
+
+[data-theme="dark"] {
+    --primary-color: #5a6fed;
+    --secondary-color: #4a4fd9;
+    --sidebar-bg: #0d1440;
+}
+
+/* Currency formatting */
+.currency::before {
+    content: 'KSh ';
+    font-weight: bold;
+}
+
+/* Light Theme (Default) */
+[data-theme="light"] {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8fafc;
+    --bg-sidebar: #1e293b;
+    --text-primary: #334155;
+    --text-secondary: #64748b;
+    --border-color: #e2e8f0;
+    --card-bg: #ffffff;
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-sidebar: #0f172a;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --border-color: #334155;
+    --card-bg: #1e293b;
+}
+
+/* Apply Theme Colors */
+[data-theme="dark"] body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .card,
+[data-theme="dark"] .modal-content,
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select {
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .table {
+    --bs-table-color: var(--text-primary);
+    --bs-table-bg: transparent;
+    --bs-table-border-color: var(--border-color);
+    --bs-table-striped-bg: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .alert {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .text-muted {
+    color: var(--text-secondary) !important;
+}
+
+/* Custom Color Themes */
+.theme-blue {
+    --primary-color: #4361ee;
+    --secondary-color: #3f37c9;
+}
+
+.theme-green {
+    --primary-color: #10b981;
+    --secondary-color: #059669;
+}
+
+.theme-red {
+    --primary-color: #ef4444;
+    --secondary-color: #dc2626;
+}
+
+.theme-purple {
+    --primary-color: #8b5cf6;
+    --secondary-color: #7c3aed;
+}
+
+.theme-orange {
+    --primary-color: #f59e0b;
+    --secondary-color: #d97706;
+}

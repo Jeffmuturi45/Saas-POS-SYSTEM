@@ -1,0 +1,591 @@
+<!-- templates/super_admin/businesses.html -->
+{% extends 'super_admin/base.html' %}
+{% load static %}
+
+{% block title %}Manage Businesses - Super Admin{% endblock %}
+
+{% block page_title %}Business Management{% endblock %}
+{% block page_subtitle %}View and manage all registered businesses{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-building me-2"></i>All Businesses</h5>
+                <a href="{% url 'register_business' %}" class="btn btn-light btn-sm">
+                    <i class="fas fa-plus me-1"></i>Register New Business
+                </a>
+            </div>
+            <div class="card-body">
+                <!-- Search and Filter -->
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="Search businesses..." id="searchBusiness">
+                            <button class="btn btn-outline-secondary" type="button">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="filterStatus">
+                            <option value="">All Status</option>
+                            <option value="ACTIVE">Active</option>
+                            <option value="PENDING">Pending</option>
+                            <option value="SUSPENDED">Suspended</option>
+                            <option value="INACTIVE">Inactive</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="filterLicense">
+                            <option value="">All License Tiers</option>
+                            <option value="DEMO">Demo</option>
+                            <option value="BASIC">Basic</option>
+                            <option value="PRO">Professional</option>
+                            <option value="ENTERPRISE">Enterprise</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-outline-secondary w-100" id="resetFilters">
+                            <i class="fas fa-redo"></i> Reset
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Businesses Table -->
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped" id="businessesTable">
+                        <thead>
+                            <tr>
+                                <th>Business Name</th>
+                                <th>Contact</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>License</th>
+                                <th>Users</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for business in businesses %}
+                            <tr data-status="{{ business.status }}" data-license="{{ business.license.tier }}">
+                                <td>
+                                    <strong>{{ business.name }}</strong><br>
+                                    <small class="text-muted">{{ business.business_type }}</small>
+                                </td>
+                                <td>
+                                    <div>{{ business.email }}</div>
+                                    <small>{{ business.phone }}</small>
+                                </td>
+                                <td>{{ business.get_business_type_display }}</td>
+                                <td>
+                                    <span class="badge badge-{% if business.status == 'ACTIVE' %}success{% elif business.status == 'PENDING' %}warning{% elif business.status == 'SUSPENDED' %}danger{% else %}secondary{% endif %}">
+                                        {{ business.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-{% if business.license.tier == 'ENTERPRISE' %}danger{% elif business.license.tier == 'PRO' %}warning{% elif business.license.tier == 'BASIC' %}info{% else %}secondary{% endif %}">
+                                        {{ business.license.get_tier_display }}
+                                    </span><br>
+                                    <small>Expires: {{ business.license.end_date|date:"M d, Y" }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary">{{ business.users.count }}/{{ business.license.max_users }}</span>
+                                </td>
+                                <td>{{ business.created_at|date:"M d, Y" }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary view-business" data-id="{{ business.id }}">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-outline-warning edit-business" data-id="{{ business.id }}">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <div class="dropdown">
+                                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" 
+                                                    data-bs-toggle="dropdown">
+                                                <i class="fas fa-ellipsis-v"></i>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li><a class="dropdown-item" href="#">
+                                                    <i class="fas fa-key me-2"></i>Renew License
+                                                </a></li>
+                                                <li><a class="dropdown-item" href="#">
+                                                    <i class="fas fa-users me-2"></i>Manage Users
+                                                </a></li>
+                                                <li><a class="dropdown-item" href="#">
+                                                    <i class="fas fa-chart-bar me-2"></i>View Reports
+                                                </a></li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                {% if business.status == 'ACTIVE' %}
+                                                <li><a class="dropdown-item text-warning suspend-business" href="#" data-id="{{ business.id }}">
+                                                    <i class="fas fa-pause me-2"></i>Suspend
+                                                </a></li>
+                                                {% elif business.status == 'SUSPENDED' %}
+                                                <li><a class="dropdown-item text-success activate-business" href="#" data-id="{{ business.id }}">
+                                                    <i class="fas fa-play me-2"></i>Activate
+                                                </a></li>
+                                                {% endif %}
+                                                <li><a class="dropdown-item text-danger delete-business" href="#" data-id="{{ business.id }}">
+                                                    <i class="fas fa-trash me-2"></i>Delete
+                                                </a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center py-4">
+                                    <i class="fas fa-building fa-3x text-muted mb-3"></i>
+                                    <h5>No businesses found</h5>
+                                    <p class="text-muted">Register your first business to get started</p>
+                                    <a href="{% url 'register_business' %}" class="btn btn-primary">
+                                        <i class="fas fa-plus me-2"></i>Register Business
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                {% if businesses.has_other_pages %}
+                <nav aria-label="Business pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if businesses.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ businesses.previous_page_number }}">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in businesses.paginator.page_range %}
+                            {% if businesses.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                            {% elif num > businesses.number|add:'-3' and num < businesses.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if businesses.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ businesses.next_page_number }}">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3 class="mb-0">{{ stats.total_businesses }}</h3>
+                        <p class="mb-0">Total Businesses</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-building fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3 class="mb-0">{{ stats.active_businesses }}</h3>
+                        <p class="mb-0">Active</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3 class="mb-0">{{ stats.demo_businesses }}</h3>
+                        <p class="mb-0">Demo Accounts</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3 class="mb-0">{{ stats.expiring_soon }}</h3>
+                        <p class="mb-0">Expiring Soon</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-exclamation-triangle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .table-hover tbody tr:hover {
+        background-color: rgba(0, 0, 0, 0.03);
+        cursor: pointer;
+    }
+    
+    .badge {
+        font-size: 0.8em;
+        padding: 0.4em 0.8em;
+    }
+    
+    .btn-group .btn {
+        border-radius: 4px !important;
+    }
+    
+    .card.bg-primary, .card.bg-success, .card.bg-warning, .card.bg-info {
+        border: none;
+        border-radius: 10px;
+        transition: transform 0.3s ease;
+    }
+    
+    .card.bg-primary:hover, .card.bg-success:hover, .card.bg-warning:hover, .card.bg-info:hover {
+        transform: translateY(-5px);
+    }
+</style>
+
+<!-- templates/super_admin/businesses.html - Update JavaScript section -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get CSRF token helper
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        // Show modal for license renewal
+        document.querySelectorAll('.renew-license').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const businessId = this.getAttribute('data-id');
+                const businessName = this.getAttribute('data-name');
+                
+                // Create renewal modal
+                const modalHtml = `
+                    <div class="modal fade" id="renewLicenseModal" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header bg-primary text-white">
+                                    <h5 class="modal-title">Renew License - ${businessName}</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form id="renewLicenseForm">
+                                        <input type="hidden" name="business_id" value="${businessId}">
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">License Tier</label>
+                                            <select class="form-select" name="tier">
+                                                <option value="DEMO">Demo (30 days)</option>
+                                                <option value="BASIC">Basic</option>
+                                                <option value="PRO">Professional</option>
+                                                <option value="ENTERPRISE">Enterprise</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Duration (Days)</label>
+                                            <select class="form-select" name="duration_days">
+                                                <option value="30">30 days</option>
+                                                <option value="90">90 days</option>
+                                                <option value="180">180 days</option>
+                                                <option value="365">1 year</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Notes (Optional)</label>
+                                            <textarea class="form-control" name="notes" rows="3"></textarea>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="button" class="btn btn-primary" id="confirmRenewal">Renew License</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Add modal to body
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                
+                // Show modal
+                const modal = new bootstrap.Modal(document.getElementById('renewLicenseModal'));
+                modal.show();
+                
+                // Handle confirm button
+                document.getElementById('confirmRenewal').addEventListener('click', function() {
+                    const form = document.getElementById('renewLicenseForm');
+                    const formData = new FormData(form);
+                    const data = Object.fromEntries(formData.entries());
+                    
+                    // Show loading
+                    const originalText = this.innerHTML;
+                    this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Processing...';
+                    this.disabled = true;
+                    
+                    // Send request
+                    fetch('/accounts/api/renew-license/', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': getCookie('csrftoken'),
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        // Reset button
+                        this.innerHTML = originalText;
+                        this.disabled = false;
+                        
+                        if (result.success) {
+                            // Show success message
+                            showToast(result.message, 'success');
+                            // Close modal
+                            modal.hide();
+                            // Reload page after 1 second
+                            setTimeout(() => location.reload(), 1000);
+                        } else {
+                            showToast('Error: ' + result.message, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        this.innerHTML = originalText;
+                        this.disabled = false;
+                        showToast('Network error: ' + error.message, 'error');
+                    });
+                });
+                
+                // Remove modal when hidden
+                document.getElementById('renewLicenseModal').addEventListener('hidden.bs.modal', function() {
+                    this.remove();
+                });
+            });
+        });
+        
+        // Suspend business
+        document.querySelectorAll('.suspend-business').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const businessId = this.getAttribute('data-id');
+                const businessName = this.getAttribute('data-name');
+                
+                const reason = prompt(`Enter reason for suspending ${businessName}:`, 'Violation of terms of service');
+                
+                if (reason !== null) {
+                    if (confirm(`Are you sure you want to suspend ${businessName}?`)) {
+                        // Show loading
+                        const originalText = this.innerHTML;
+                        this.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+                        
+                        fetch('/accounts/api/suspend-business/', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': getCookie('csrftoken'),
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                business_id: businessId,
+                                reason: reason
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(result => {
+                            if (result.success) {
+                                showToast(result.message, 'success');
+                                setTimeout(() => location.reload(), 1000);
+                            } else {
+                                showToast('Error: ' + result.message, 'error');
+                                this.innerHTML = originalText;
+                            }
+                        })
+                        .catch(error => {
+                            showToast('Network error: ' + error.message, 'error');
+                            this.innerHTML = originalText;
+                        });
+                    }
+                }
+            });
+        });
+        
+        // Activate business
+        document.querySelectorAll('.activate-business').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const businessId = this.getAttribute('data-id');
+                const businessName = this.getAttribute('data-name');
+                
+                if (confirm(`Activate ${businessName}?`)) {
+                    // Show loading
+                    const originalText = this.innerHTML;
+                    this.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+                    
+                    fetch('/accounts/api/activate-business/', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': getCookie('csrftoken'),
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ business_id: businessId })
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.success) {
+                            showToast(result.message, 'success');
+                            setTimeout(() => location.reload(), 1000);
+                        } else {
+                            showToast('Error: ' + result.message, 'error');
+                            this.innerHTML = originalText;
+                        }
+                    })
+                    .catch(error => {
+                        showToast('Network error: ' + error.message, 'error');
+                        this.innerHTML = originalText;
+                    });
+                }
+            });
+        });
+        
+        // Delete business
+        document.querySelectorAll('.delete-business').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const businessId = this.getAttribute('data-id');
+                const businessName = this.getAttribute('data-name');
+                
+                if (confirm(`Permanently delete ${businessName}? This action cannot be undone!`)) {
+                    if (confirm('Are you absolutely sure? All data will be lost!')) {
+                        // Show loading
+                        const originalText = this.innerHTML;
+                        this.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+                        
+                        fetch('/accounts/api/delete-business/', {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRFToken': getCookie('csrftoken'),
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ business_id: businessId })
+                        })
+                        .then(response => response.json())
+                        .then(result => {
+                            if (result.success) {
+                                showToast(result.message, 'success');
+                                setTimeout(() => location.reload(), 1000);
+                            } else {
+                                showToast('Error: ' + result.message, 'error');
+                                this.innerHTML = originalText;
+                            }
+                        })
+                        .catch(error => {
+                            showToast('Network error: ' + error.message, 'error');
+                            this.innerHTML = originalText;
+                        });
+                    }
+                }
+            });
+        });
+        
+        // View business details
+        document.querySelectorAll('.view-business').forEach(button => {
+            button.addEventListener('click', function() {
+                const businessId = this.getAttribute('data-id');
+                window.location.href = `/accounts/super-admin/business/${businessId}/`;
+            });
+        });
+        
+        // Edit business
+        document.querySelectorAll('.edit-business').forEach(button => {
+            button.addEventListener('click', function() {
+                const businessId = this.getAttribute('data-id');
+                window.location.href = `/accounts/super-admin/business/${businessId}/edit/`;
+            });
+        });
+        
+        // Toast notification function
+        function showToast(message, type = 'info') {
+            const toastId = 'toast-' + Date.now();
+            const typeClass = type === 'success' ? 'bg-success' : 
+                            type === 'error' ? 'bg-danger' : 
+                            type === 'warning' ? 'bg-warning' : 'bg-info';
+            
+            const toastHtml = `
+                <div id="${toastId}" class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+                    <div class="toast show" role="alert">
+                        <div class="toast-header ${typeClass} text-white">
+                            <strong class="me-auto">
+                                <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle'}"></i>
+                                ${type.charAt(0).toUpperCase() + type.slice(1)}
+                            </strong>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                        </div>
+                        <div class="toast-body">
+                            ${message}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', toastHtml);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                const toast = document.getElementById(toastId);
+                if (toast) {
+                    toast.remove();
+                }
+            }, 5000);
+        }
+    });
+</script>
+{% endblock %}

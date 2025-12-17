@@ -1,0 +1,46 @@
+<!-- templates/cashier/base.html -->
+{% extends 'base_sidebar.html' %}
+{% load static %}
+
+{% block sidebar_header %}
+<div class="logo-container">
+    <i class="fas fa-cash-register logo-icon"></i>
+    <h3 class="logo-text">POS Terminal</h3>
+</div>
+<button class="sidebar-close-btn" id="sidebarClose">
+    <i class="fas fa-times"></i>
+</button>
+{% endblock %}
+
+{% block sidebar_menu %}
+<li class="nav-item">
+    <a class="nav-link" href="{% url 'cashier_dashboard' %}">
+        <i class="fas fa-home"></i>
+        <span>Home</span>
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link" href="#">
+        <i class="fas fa-shopping-cart"></i>
+        <span>New Sale</span>
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link" href="#">
+        <i class="fas fa-history"></i>
+        <span>Sales History</span>
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link" href="#">
+        <i class="fas fa-box"></i>
+        <span>Products</span>
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link" href="#">
+        <i class="fas fa-print"></i>
+        <span>Print Receipt</span>
+    </a>
+</li>
+{% endblock %}

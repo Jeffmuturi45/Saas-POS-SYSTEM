@@ -1,0 +1,171 @@
+<!-- templates/base_sidebar.html -->
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SaaS POS System{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <link rel="stylesheet" href="{% static 'css/themes.css' %}">
+    <link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{% static 'icons/favicon.ico' %}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Sidebar Toggle Button for Mobile -->
+    <button class="sidebar-toggle-btn" id="sidebarToggle">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <!-- Sidebar Overlay for Mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Sidebar -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                {% block sidebar_header %}
+                <div class="logo-container">
+                    <i class="fas fa-cash-register logo-icon"></i>
+                    <h3 class="logo-text">SaaS POS</h3>
+                </div>
+                <button class="sidebar-close-btn" id="sidebarClose">
+                    <i class="fas fa-times"></i>
+                </button>
+                {% endblock %}
+            </div>
+            
+            <div class="sidebar-user-info">
+                {% block sidebar_user_info %}
+                <div class="user-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="user-details">
+                    <h6 class="user-name">{{ user.get_full_name|default:user.username }}</h6>
+                    <span class="user-role badge {% if user.is_super_admin %}bg-danger{% elif user.is_business_admin %}bg-success{% else %}bg-info{% endif %}">
+                        {{ user.role|title }}
+                    </span>
+                    {% if user.business %}
+                    <small class="user-business text-muted">{{ user.business.name }}</small>
+                    {% endif %}
+                </div>
+                {% endblock %}
+            </div>
+            
+            <div class="sidebar-menu">
+                <ul class="nav flex-column">
+                    {% block sidebar_menu %}{% endblock %}
+                </ul>
+            </div>
+            
+            <div class="sidebar-footer">
+                {% block sidebar_footer %}
+                <div class="theme-toggle">
+                    <i class="fas fa-moon"></i>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="themeSwitch">
+                        <label class="form-check-label" for="themeSwitch"></label>
+                    </div>
+                    <i class="fas fa-sun"></i>
+                </div>
+                <a href="{% url 'logout' %}" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
+                </a>
+                {% endblock %}
+            </div>
+        </nav>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Navigation Bar -->
+            <nav class="top-navbar">
+                <div class="container-fluid">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="page-title">
+                            <h4>{% block page_title %}Dashboard{% endblock %}</h4>
+                            <small class="text-muted">{% block page_subtitle %}{% endblock %}</small>
+                        </div>
+                        
+                        <div class="top-nav-actions">
+                            {% block top_nav_actions %}
+                            <div class="dropdown">
+                                <button class="btn btn-light dropdown-toggle" type="button" id="notificationsDropdown" data-bs-toggle="dropdown">
+                                    <i class="fas fa-bell"></i>
+                                    <span class="badge bg-danger">3</span>
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-end">
+                                    <h6 class="dropdown-header">Notifications</h6>
+                                    <a class="dropdown-item" href="#">
+                                        <i class="fas fa-user-plus text-success"></i>
+                                        New user registered
+                                    </a>
+                                    <a class="dropdown-item" href="#">
+                                        <i class="fas fa-shopping-cart text-primary"></i>
+                                        New sale completed
+                                    </a>
+                                    <a class="dropdown-item" href="#">
+                                        <i class="fas fa-exclamation-triangle text-warning"></i>
+                                        Low stock alert
+                                    </a>
+                                    <div class="dropdown-divider"></div>
+                                    <a class="dropdown-item text-center" href="#">View all notifications</a>
+                                </div>
+                            </div>
+                            {% endblock %}
+                        </div>
+                    </div>
+                </div>
+            </nav>
+            
+            <!-- Messages Display -->
+            {% if messages %}
+            <div class="container-fluid mt-3">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    <i class="fas 
+                        {% if message.tags == 'success' %}fa-check-circle
+                        {% elif message.tags == 'error' or message.tags == 'danger' %}fa-exclamation-circle
+                        {% elif message.tags == 'warning' %}fa-exclamation-triangle
+                        {% else %}fa-info-circle
+                        {% endif %} me-2"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <!-- Page Content -->
+            <div class="container-fluid py-4">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+    
+    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Chart.js for graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom JS -->
+    <script src="{% static 'js/main.js' %}"></script>
+    <script src="{% static 'js/sidebar.js' %}"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

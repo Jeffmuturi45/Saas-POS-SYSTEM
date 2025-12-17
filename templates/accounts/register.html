@@ -1,0 +1,33 @@
+<!-- templates/accounts/register.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Register - SaaS POS{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center align-items-center min-vh-100">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <h2 class="fw-bold text-primary">Business Registration</h2>
+                        <p class="text-muted">Create your business account</p>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Registration functionality will be implemented in Phase 2.
+                    </div>
+                    
+                    <div class="text-center">
+                        <a href="{% url 'login' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Login
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,640 @@
+<!-- templates/super_admin/licenses.html -->
+{% extends 'super_admin/base.html' %}
+{% load static %}
+
+{% block title %}License Management - Super Admin{% endblock %}
+
+{% block page_title %}License Management{% endblock %}
+{% block page_subtitle %}Manage and monitor all business licenses{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-key me-2"></i>All Licenses</h5>
+                <div>
+                    <button class="btn btn-light btn-sm me-2" id="generateLicenseBtn">
+                        <i class="fas fa-plus me-1"></i>Generate License
+                    </button>
+                    <button class="btn btn-light btn-sm" id="exportLicensesBtn">
+                        <i class="fas fa-download me-1"></i>Export
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Filter Section -->
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <select class="form-select" id="filterLicenseTier">
+                            <option value="">All Tiers</option>
+                            <option value="DEMO">Demo</option>
+                            <option value="BASIC">Basic</option>
+                            <option value="PRO">Professional</option>
+                            <option value="ENTERPRISE">Enterprise</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="filterLicenseStatus">
+                            <option value="">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="expired">Expired</option>
+                            <option value="expiring">Expiring Soon</option>
+                            <option value="suspended">Suspended</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="Search licenses..." id="searchLicense">
+                            <button class="btn btn-outline-secondary" type="button">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-outline-secondary w-100" id="resetLicenseFilters">
+                            <i class="fas fa-redo"></i> Reset
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Licenses Table -->
+                <div class="table-responsive">
+                    <table class="table table-hover" id="licensesTable">
+                        <thead>
+                            <tr>
+                                <th>License Key</th>
+                                <th>Business</th>
+                                <th>Tier</th>
+                                <th>Status</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Days Left</th>
+                                <th>Price (KSh)</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for license in licenses %}
+                            <tr data-tier="{{ license.tier }}" data-status="{{ license.status }}">
+                                <td>
+                                    <code class="license-key">{{ license.license_key|truncatechars:15 }}</code>
+                                    <button class="btn btn-sm btn-outline-secondary copy-key" 
+                                            data-key="{{ license.license_key }}"
+                                            title="Copy license key">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </td>
+                                <td>
+                                    <strong>{{ license.business.name }}</strong><br>
+                                    <small class="text-muted">{{ license.business.email }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge badge-{% if license.tier == 'ENTERPRISE' %}danger{% elif license.tier == 'PRO' %}warning{% elif license.tier == 'BASIC' %}info{% else %}secondary{% endif %}">
+                                        {{ license.get_tier_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if license.is_active and license.days_remaining > 0 %}
+                                        {% if license.days_remaining <= 7 %}
+                                        <span class="badge bg-warning">Expiring Soon</span>
+                                        {% else %}
+                                        <span class="badge bg-success">Active</span>
+                                        {% endif %}
+                                    {% elif license.is_active %}
+                                        <span class="badge bg-danger">Expired</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Suspended</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ license.start_date|date:"M d, Y" }}</td>
+                                <td>{{ license.end_date|date:"M d, Y" }}</td>
+                                <td>
+                                    {% if license.is_active %}
+                                        <span class="fw-bold {% if license.days_remaining <= 7 %}text-warning{% elif license.days_remaining <= 0 %}text-danger{% else %}text-success{% endif %}">
+                                            {{ license.days_remaining }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>KSh {{ license.monthly_price|floatformat:2 }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary view-license" data-id="{{ license.id }}">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-outline-warning renew-license" 
+                                                data-id="{{ license.id }}"
+                                                data-business="{{ license.business.name }}">
+                                            <i class="fas fa-sync-alt"></i>
+                                        </button>
+                                        <div class="dropdown">
+                                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" 
+                                                    data-bs-toggle="dropdown">
+                                                <i class="fas fa-ellipsis-v"></i>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li><a class="dropdown-item" href="#" data-action="send-reminder" data-id="{{ license.id }}">
+                                                    <i class="fas fa-envelope me-2"></i>Send Reminder
+                                                </a></li>
+                                                <li><a class="dropdown-item" href="#" data-action="upgrade-tier" data-id="{{ license.id }}">
+                                                    <i class="fas fa-arrow-up me-2"></i>Upgrade Tier
+                                                </a></li>
+                                                <li><a class="dropdown-item" href="#" data-action="downgrade-tier" data-id="{{ license.id }}">
+                                                    <i class="fas fa-arrow-down me-2"></i>Downgrade Tier
+                                                </a></li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                {% if license.is_active %}
+                                                <li><a class="dropdown-item text-warning" href="#" data-action="suspend-license" data-id="{{ license.id }}">
+                                                    <i class="fas fa-pause me-2"></i>Suspend License
+                                                </a></li>
+                                                {% else %}
+                                                <li><a class="dropdown-item text-success" href="#" data-action="activate-license" data-id="{{ license.id }}">
+                                                    <i class="fas fa-play me-2"></i>Activate License
+                                                </a></li>
+                                                {% endif %}
+                                                <li><a class="dropdown-item text-danger" href="#" data-action="delete-license" data-id="{{ license.id }}">
+                                                    <i class="fas fa-trash me-2"></i>Delete License
+                                                </a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="9" class="text-center py-4">
+                                    <i class="fas fa-key fa-3x text-muted mb-3"></i>
+                                    <h5>No licenses found</h5>
+                                    <p class="text-muted">Register a business to create a license</p>
+                                    <a href="{% url 'register_business' %}" class="btn btn-primary">
+                                        <i class="fas fa-plus me-2"></i>Register Business
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                {% if licenses.has_other_pages %}
+                <nav aria-label="License pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if licenses.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ licenses.previous_page_number }}">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in licenses.paginator.page_range %}
+                            {% if licenses.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                            {% elif num > licenses.number|add:'-3' and num < licenses.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if licenses.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ licenses.next_page_number }}">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- License Stats -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3 class="mb-0">{{ stats.total_licenses }}</h3>
+                        <p class="mb-0">Total Licenses</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-key fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3 class="mb-0">{{ stats.active_licenses }}</h3>
+                        <p class="mb-0">Active</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3 class="mb-0">{{ stats.expiring_soon }}</h3>
+                        <p class="mb-0">Expiring Soon</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3 class="mb-0">{{ stats.expired_licenses }}</h3>
+                        <p class="mb-0">Expired</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-times-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Generate License Modal (hidden by default) -->
+<div class="modal fade" id="generateLicenseModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Generate New License</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="generateLicenseForm">
+                    <div class="mb-3">
+                        <label class="form-label">Select Business</label>
+                        <select class="form-select" name="business_id" required>
+                            <option value="">-- Select Business --</option>
+                            {% for business in all_businesses %}
+                            <option value="{{ business.id }}">{{ business.name }} ({{ business.email }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">License Tier</label>
+                        <select class="form-select" name="tier" required>
+                            <option value="DEMO">Demo (30 days)</option>
+                            <option value="BASIC">Basic (KSh 2,999/month)</option>
+                            <option value="PRO">Professional (KSh 7,999/month)</option>
+                            <option value="ENTERPRISE">Enterprise (KSh 14,999/month)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Duration (Months)</label>
+                        <select class="form-select" name="duration_months">
+                            <option value="1">1 Month</option>
+                            <option value="3">3 Months</option>
+                            <option value="6">6 Months</option>
+                            <option value="12">12 Months</option>
+                            <option value="24">24 Months</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Notes (Optional)</label>
+                        <textarea class="form-control" name="notes" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="generateLicenseSubmit">Generate License</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .license-key {
+        font-family: 'Courier New', monospace;
+        background: #f8f9fa;
+        padding: 2px 6px;
+        border-radius: 3px;
+        border: 1px solid #dee2e6;
+    }
+    
+    .copy-key {
+        padding: 2px 6px;
+        font-size: 0.8rem;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Copy license key
+        document.querySelectorAll('.copy-key').forEach(button => {
+            button.addEventListener('click', function() {
+                const key = this.getAttribute('data-key');
+                navigator.clipboard.writeText(key).then(() => {
+                    const originalHTML = this.innerHTML;
+                    this.innerHTML = '<i class="fas fa-check"></i>';
+                    this.classList.remove('btn-outline-secondary');
+                    this.classList.add('btn-success');
+                    
+                    setTimeout(() => {
+                        this.innerHTML = originalHTML;
+                        this.classList.remove('btn-success');
+                        this.classList.add('btn-outline-secondary');
+                    }, 2000);
+                });
+            });
+        });
+        
+        // Generate license button
+        document.getElementById('generateLicenseBtn').addEventListener('click', function() {
+            const modal = new bootstrap.Modal(document.getElementById('generateLicenseModal'));
+            modal.show();
+        });
+        
+        // Generate license form submission
+        document.getElementById('generateLicenseSubmit').addEventListener('click', function() {
+            const form = document.getElementById('generateLicenseForm');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            
+            // Show loading
+            const originalText = this.innerHTML;
+            this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Generating...';
+            this.disabled = true;
+            
+            // In production, make API call
+            setTimeout(() => {
+                // Simulate API call
+                showToast('License generated successfully!', 'success');
+                this.innerHTML = originalText;
+                this.disabled = false;
+                bootstrap.Modal.getInstance(document.getElementById('generateLicenseModal')).hide();
+                
+                // Reload after 1 second
+                setTimeout(() => location.reload(), 1000);
+            }, 1500);
+        });
+        
+        // Renew license
+        document.querySelectorAll('.renew-license').forEach(button => {
+            button.addEventListener('click', function() {
+                const licenseId = this.getAttribute('data-id');
+                const businessName = this.getAttribute('data-business');
+                
+                // Show renewal modal (similar to business renewal)
+                const modalHtml = `
+                    <div class="modal fade" id="renewLicenseModal" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header bg-primary text-white">
+                                    <h5 class="modal-title">Renew License - ${businessName}</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form id="renewLicenseForm">
+                                        <input type="hidden" name="license_id" value="${licenseId}">
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Renewal Period</label>
+                                            <select class="form-select" name="duration_months">
+                                                <option value="1">1 Month</option>
+                                                <option value="3" selected>3 Months</option>
+                                                <option value="6">6 Months</option>
+                                                <option value="12">12 Months</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Payment Method</label>
+                                            <select class="form-select" name="payment_method">
+                                                <option value="MPESA">M-PESA</option>
+                                                <option value="CASH">Cash</option>
+                                                <option value="BANK_TRANSFER">Bank Transfer</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Payment Reference (Optional)</label>
+                                            <input type="text" class="form-control" name="payment_reference" placeholder="Enter payment reference">
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="button" class="btn btn-primary" id="confirmLicenseRenewal">Renew License</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                const modal = new bootstrap.Modal(document.getElementById('renewLicenseModal'));
+                modal.show();
+                
+                // Handle renewal
+                document.getElementById('confirmLicenseRenewal').addEventListener('click', function() {
+                    const form = document.getElementById('renewLicenseForm');
+                    const formData = new FormData(form);
+                    const data = Object.fromEntries(formData.entries());
+                    
+                    // Show loading
+                    const originalText = this.innerHTML;
+                    this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Processing...';
+                    this.disabled = true;
+                    
+                    // Make API call
+                    fetch('/accounts/api/license/renew/', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': getCookie('csrftoken'),
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        this.innerHTML = originalText;
+                        this.disabled = false;
+                        
+                        if (result.success) {
+                            showToast(result.message, 'success');
+                            modal.hide();
+                            setTimeout(() => location.reload(), 1000);
+                        } else {
+                            showToast('Error: ' + result.message, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        this.innerHTML = originalText;
+                        this.disabled = false;
+                        showToast('Network error: ' + error.message, 'error');
+                    });
+                });
+                
+                // Clean up modal
+                document.getElementById('renewLicenseModal').addEventListener('hidden.bs.modal', function() {
+                    this.remove();
+                });
+            });
+        });
+        
+        // License actions
+        document.querySelectorAll('[data-action]').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const action = this.getAttribute('data-action');
+                const licenseId = this.getAttribute('data-id');
+                
+                switch(action) {
+                    case 'send-reminder':
+                        if (confirm('Send renewal reminder to business?')) {
+                            fetch(`/accounts/api/license/${licenseId}/send-reminder/`, {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRFToken': getCookie('csrftoken')
+                                }
+                            })
+                            .then(response => response.json())
+                            .then(result => {
+                                if (result.success) {
+                                    showToast('Reminder sent successfully', 'success');
+                                } else {
+                                    showToast('Error: ' + result.message, 'error');
+                                }
+                            });
+                        }
+                        break;
+                        
+                    case 'suspend-license':
+                        if (confirm('Suspend this license? The business will lose access.')) {
+                            fetch(`/accounts/api/license/${licenseId}/suspend/`, {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRFToken': getCookie('csrftoken')
+                                }
+                            })
+                            .then(response => response.json())
+                            .then(result => {
+                                if (result.success) {
+                                    showToast('License suspended', 'success');
+                                    setTimeout(() => location.reload(), 1000);
+                                } else {
+                                    showToast('Error: ' + result.message, 'error');
+                                }
+                            });
+                        }
+                        break;
+                        
+                    case 'activate-license':
+                        if (confirm('Activate this license?')) {
+                            fetch(`/accounts/api/license/${licenseId}/activate/`, {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRFToken': getCookie('csrftoken')
+                                }
+                            })
+                            .then(response => response.json())
+                            .then(result => {
+                                if (result.success) {
+                                    showToast('License activated', 'success');
+                                    setTimeout(() => location.reload(), 1000);
+                                } else {
+                                    showToast('Error: ' + result.message, 'error');
+                                }
+                            });
+                        }
+                        break;
+                        
+                    case 'delete-license':
+                        if (confirm('Permanently delete this license? This cannot be undone!')) {
+                            fetch(`/accounts/api/license/${licenseId}/delete/`, {
+                                method: 'DELETE',
+                                headers: {
+                                    'X-CSRFToken': getCookie('csrftoken')
+                                }
+                            })
+                            .then(response => response.json())
+                            .then(result => {
+                                if (result.success) {
+                                    showToast('License deleted', 'success');
+                                    setTimeout(() => location.reload(), 1000);
+                                } else {
+                                    showToast('Error: ' + result.message, 'error');
+                                }
+                            });
+                        }
+                        break;
+                }
+            });
+        });
+        
+        // Get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        function showToast(message, type = 'info') {
+            const toastId = 'toast-' + Date.now();
+            const toastHtml = `
+                <div id="${toastId}" class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+                    <div class="toast show" role="alert">
+                        <div class="toast-header bg-${type} text-white">
+                            <strong class="me-auto">${type.charAt(0).toUpperCase() + type.slice(1)}</strong>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                        </div>
+                        <div class="toast-body">
+                            ${message}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', toastHtml);
+            
+            setTimeout(() => {
+                const toast = document.getElementById(toastId);
+                if (toast) toast.remove();
+            }, 5000);
+        }
+    });
+</script>
+{% endblock %}

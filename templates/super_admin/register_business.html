@@ -1,0 +1,199 @@
+<!-- templates/super_admin/register_business.html -->
+{% extends 'super_admin/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Register New Business - Super Admin{% endblock %}
+
+{% block page_title %}Register New Business{% endblock %}
+{% block page_subtitle %}Create a new business account and assign admin user{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-building me-2"></i>Business Registration Form</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" id="businessRegistrationForm">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.business_name|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.business_type|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.contact_email|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.contact_phone|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    {{ form.address|as_crispy_field }}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.city|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.country|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    <h5><i class="fas fa-user-shield me-2"></i>Admin User Details</h5>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.admin_username|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.admin_email|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.admin_first_name|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.admin_last_name|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    {{ form.admin_phone|as_crispy_field }}
+                    
+                    <hr class="my-4">
+                    <h5><i class="fas fa-key me-2"></i>License Details</h5>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.license_tier|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.license_duration|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note:</strong> A random secure password will be generated for the admin user and displayed after registration.
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-save me-2"></i>Register Business
+                        </button>
+                        <a href="{% url 'super_admin_dashboard' %}" class="btn btn-outline-secondary btn-lg">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Quick Guide</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6><i class="fas fa-building text-primary me-2"></i>Business Registration</h6>
+                    <p class="small text-muted">Register a new business that will use the SaaS POS system.</p>
+                </div>
+                
+                <div class="mb-3">
+                    <h6><i class="fas fa-user-tie text-success me-2"></i>Admin User</h6>
+                    <p class="small text-muted">Create the business administrator who will manage the account.</p>
+                </div>
+                
+                <div class="mb-3">
+                    <h6><i class="fas fa-key text-warning me-2"></i>License Assignment</h6>
+                    <p class="small text-muted">Choose the appropriate license tier and duration for the business.</p>
+                </div>
+                
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Important:</strong> Save the admin credentials securely after registration.
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <a href="#" class="list-group-item list-group-item-action">
+                        <i class="fas fa-eye me-2"></i>View All Businesses
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action">
+                        <i class="fas fa-file-invoice me-2"></i>Generate License Report
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action">
+                        <i class="fas fa-envelope me-2"></i>Send Welcome Email
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border-radius: 10px;
+        border: none;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .card-header {
+        border-radius: 10px 10px 0 0 !important;
+    }
+    
+    .btn-lg {
+        padding: 0.75rem 1.5rem;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // License tier change handler
+        const licenseTierSelect = document.getElementById('id_license_tier');
+        const licenseDurationSelect = document.getElementById('id_license_duration');
+        
+        if (licenseTierSelect) {
+            licenseTierSelect.addEventListener('change', function() {
+                if (this.value === 'DEMO') {
+                    // For demo, set duration to 30 days
+                    licenseDurationSelect.value = '30';
+                    licenseDurationSelect.disabled = true;
+                } else {
+                    licenseDurationSelect.disabled = false;
+                }
+            });
+            
+            // Trigger change on load
+            licenseTierSelect.dispatchEvent(new Event('change'));
+        }
+        
+        // Form validation
+        const form = document.getElementById('businessRegistrationForm');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                // Add any additional validation here
+                return true;
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,479 @@
+<!-- templates/business_admin/dashboard.html -->
+{% extends 'business_admin/base.html' %}
+{% load static %}
+
+{% block title %}Business Dashboard - {{ business.name }}{% endblock %}
+
+{% block page_title %}Business Dashboard{% endblock %}
+{% block page_subtitle %}Welcome back, {{ user.get_full_name|default:user.username }}!{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Stats Cards -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Today's Sales
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            KSh {{ today_sales.total_amount|default:0|floatformat:2 }}
+                        </div>
+                        <div class="mt-2 mb-0 text-muted text-xs">
+                            <span class="text-success mr-2">
+                                <i class="fas fa-shopping-cart"></i> {{ today_sales.count|default:0 }} transactions
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-calendar-day fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            This Week
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            KSh {{ week_sales.total_amount|default:0|floatformat:2 }}
+                        </div>
+                        <div class="mt-2 mb-0 text-muted text-xs">
+                            <span>{{ week_sales.count|default:0 }} sales</span>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Products
+                        </div>
+                        <div class="row no-gutters align-items-center">
+                            <div class="col-auto">
+                                <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">
+                                    {{ total_products }}
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="progress progress-sm mr-2">
+                                    <div class="progress-bar bg-info" style="width: 70%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-2 mb-0 text-muted text-xs">
+                            <span class="text-danger mr-2">
+                                <i class="fas fa-exclamation-triangle"></i> {{ low_stock_products }} low stock
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-boxes fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Staff Members
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ total_staff }}
+                        </div>
+                        <div class="mt-2 mb-0 text-muted text-xs">
+                            <span>Active users in your business</span>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Revenue Chart -->
+<div class="row mb-4">
+    <div class="col-xl-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold">Weekly Revenue Trend</h6>
+                <span class="badge bg-light text-primary">Last 7 Days</span>
+            </div>
+            <div class="card-body">
+                <canvas id="revenueChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-4">
+        <div class="card shadow h-100">
+            <div class="card-header bg-success text-white">
+                <h6 class="m-0 font-weight-bold">Top Selling Products</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Sold</th>
+                                <th>Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in top_products %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if product.primary_image %}
+                                        <img src="{{ product.primary_image.url }}" alt="{{ product.name }}" 
+                                             class="rounded me-2" width="30" height="30">
+                                        {% else %}
+                                        <div class="rounded bg-light me-2 d-flex align-items-center justify-content-center" 
+                                             style="width: 30px; height: 30px;">
+                                            <i class="fas fa-box text-muted"></i>
+                                        </div>
+                                        {% endif %}
+                                        <span>{{ product.name|truncatechars:20 }}</span>
+                                    </div>
+                                </td>
+                                <td class="fw-bold">{{ product.total_sold|default:0 }}</td>
+                                <td>
+                                    <span class="badge bg-success">
+                                        KSh {{ product.selling_price|floatformat:2 }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-3">
+                                    No sales data yet
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Sales & Notifications -->
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold">Recent Sales</h6>
+                <a href="{% url 'business_sales' %}" class="btn btn-light btn-sm">
+                    View All
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Receipt #</th>
+                                <th>Customer</th>
+                                <th>Amount</th>
+                                <th>Method</th>
+                                <th>Cashier</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sale in recent_sales %}
+                            <tr>
+                                <td>
+                                    <strong>#{{ sale.receipt_number }}</strong>
+                                </td>
+                                <td>
+                                    {{ sale.customer_name|default:"Walk-in Customer" }}
+                                    {% if sale.customer_phone %}
+                                    <br><small class="text-muted">{{ sale.customer_phone }}</small>
+                                    {% endif %}
+                                </td>
+                                <td class="fw-bold text-success">
+                                    KSh {{ sale.total_amount|floatformat:2 }}
+                                </td>
+                                <td>
+                                    <span class="badge badge-{% if sale.payment_method == 'CASH' %}success{% elif sale.payment_method == 'MPESA' %}primary{% else %}info{% endif %}">
+                                        {{ sale.get_payment_method_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {{ sale.cashier.username }}
+                                </td>
+                                <td>
+                                    {{ sale.created_at|timesince }} ago
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4">
+                                    <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+                                    <h5>No sales yet</h5>
+                                    <p class="text-muted">Start making sales to see data here</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card shadow">
+            <div class="card-header bg-warning text-white d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold">Recent Notifications</h6>
+                <a href="{% url 'business_notifications' %}" class="btn btn-light btn-sm">
+                    View All
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="notification-list">
+                    {% for notification in recent_notifications %}
+                    <div class="notification-item mb-3 pb-3 border-bottom {% if not notification.is_read %}unread{% endif %}" 
+                         data-id="{{ notification.id }}">
+                        <div class="d-flex">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-{{ notification.get_icon }} text-{{ notification.get_color }} fa-lg"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="mb-1">{{ notification.title }}</h6>
+                                <p class="mb-1 small text-muted">{{ notification.message|truncatechars:80 }}</p>
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>{{ notification.created_at|timesince }} ago
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+                        <h5>No notifications</h5>
+                        <p class="text-muted">You're all caught up!</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="card shadow mt-4">
+            <div class="card-header bg-secondary text-white">
+                <h6 class="m-0 font-weight-bold">Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="row g-2">
+                    <div class="col-6">
+                        <a href="{% url 'business_pos' %}" class="btn btn-primary w-100">
+                            <i class="fas fa-cash-register me-2"></i>New Sale
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{% url 'business_products' %}" class="btn btn-success w-100">
+                            <i class="fas fa-plus me-2"></i>Add Product
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{% url 'business_reports' %}" class="btn btn-info w-100">
+                            <i class="fas fa-chart-bar me-2"></i>View Reports
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{% url 'business_settings' %}" class="btn btn-warning w-100">
+                            <i class="fas fa-cog me-2"></i>Settings
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .border-left-primary {
+        border-left: 4px solid #4e73df !important;
+    }
+    
+    .border-left-success {
+        border-left: 4px solid #1cc88a !important;
+    }
+    
+    .border-left-info {
+        border-left: 4px solid #36b9cc !important;
+    }
+    
+    .border-left-warning {
+        border-left: 4px solid #f6c23e !important;
+    }
+    
+    .notification-item.unread {
+        border-left: 3px solid var(--primary-color);
+        padding-left: 10px;
+    }
+    
+    .card {
+        border-radius: 10px;
+        border: none;
+    }
+    
+    .card-header {
+        border-radius: 10px 10px 0 0 !important;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Revenue Chart
+        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+        
+        const revenueLabels = [
+            {% for day in daily_revenue %}
+            "{{ day.date }}"{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+        
+        const revenueData = [
+            {% for day in daily_revenue %}
+            {{ day.revenue }}{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+        
+        const revenueChart = new Chart(revenueCtx, {
+            type: 'bar',
+            data: {
+                labels: revenueLabels,
+                datasets: [{
+                    label: 'Daily Revenue (KSh)',
+                    data: revenueData,
+                    backgroundColor: 'rgba(78, 115, 223, 0.8)',
+                    borderColor: 'rgba(78, 115, 223, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'Revenue: KSh ' + context.parsed.y.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return 'KSh ' + value.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Mark notification as read when clicked
+        document.querySelectorAll('.notification-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const notificationId = this.getAttribute('data-id');
+                
+                if (this.classList.contains('unread')) {
+                    // Mark as read via API
+                    fetch(`/accounts/api/notification/${notificationId}/mark-read/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': getCookie('csrftoken'),
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.success) {
+                            this.classList.remove('unread');
+                            updateNotificationBadge();
+                        }
+                    });
+                }
+            });
+        });
+        
+        // Update notification badge
+        function updateNotificationBadge() {
+            const unreadCount = document.querySelectorAll('.notification-item.unread').length;
+            const dropdownBadge = document.querySelector('#businessNotificationsDropdown .badge');
+            const sidebarBadge = document.querySelector('.sidebar-menu .badge');
+            
+            if (dropdownBadge) {
+                dropdownBadge.textContent = unreadCount;
+                if (unreadCount === 0) {
+                    dropdownBadge.classList.add('d-none');
+                } else {
+                    dropdownBadge.classList.remove('d-none');
+                }
+            }
+            
+            if (sidebarBadge) {
+                sidebarBadge.textContent = unreadCount;
+                if (unreadCount === 0) {
+                    sidebarBadge.classList.add('d-none');
+                } else {
+                    sidebarBadge.classList.remove('d-none');
+                }
+            }
+        }
+        
+        // Get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+</script>
+{% endblock %}

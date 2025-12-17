@@ -1,0 +1,121 @@
+<!-- templates/super_admin/base.html -->
+{% extends 'base_sidebar.html' %}
+{% load static %}
+
+{% block sidebar_header %}
+<div class="logo-container">
+    <i class="fas fa-crown logo-icon"></i>
+    <h3 class="logo-text">Super Admin</h3>
+</div>
+<button class="sidebar-close-btn" id="sidebarClose">
+    <i class="fas fa-times"></i>
+</button>
+{% endblock %}
+
+{% block sidebar_menu %}
+<li class="nav-item">
+    <a class="nav-link {% if request.resolver_match.url_name == 'super_admin_dashboard' %}active{% endif %}" 
+       href="{% url 'super_admin_dashboard' %}">
+        <i class="fas fa-tachometer-alt"></i>
+        <span>Dashboard</span>
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link {% if request.resolver_match.url_name == 'manage_businesses' %}active{% endif %}" 
+       href="{% url 'manage_businesses' %}">
+        <i class="fas fa-building"></i>
+        <span>Businesses</span>
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link {% if request.resolver_match.url_name == 'manage_users' %}active{% endif %}" 
+       href="{% url 'manage_users' %}">
+        <i class="fas fa-users"></i>
+        <span>Users</span>
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link {% if request.resolver_match.url_name == 'register_business' %}active{% endif %}" 
+       href="{% url 'register_business' %}">
+        <i class="fas fa-user-plus"></i>
+        <span>Register Business</span>
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link {% if request.resolver_match.url_name == 'manage_licenses' %}active{% endif %}" 
+       href="{% url 'manage_licenses' %}">
+        <i class="fas fa-key"></i>
+        <span>Licenses</span>
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link {% if request.resolver_match.url_name == 'analytics_view' %}active{% endif %}" 
+       href="{% url 'analytics_view' %}">
+        <i class="fas fa-chart-bar"></i>
+        <span>Analytics</span>
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link {% if request.resolver_match.url_name == 'system_settings' %}active{% endif %}" 
+       href="{% url 'system_settings' %}">
+        <i class="fas fa-cog"></i>
+        <span>System Settings</span>
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link {% if request.resolver_match.url_name == 'notifications_view' %}active{% endif %}" 
+       href="{% url 'notifications_view' %}">
+        <i class="fas fa-bell"></i>
+        <span>Notifications</span>
+        {% if unread_notifications_count > 0 %}
+        <span class="badge bg-danger float-end">{{ unread_notifications_count }}</span>
+        {% endif %}
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link {% if request.resolver_match.url_name == 'theme_customization' %}active{% endif %}" 
+       href="{% url 'theme_customization' %}">
+        <i class="fas fa-palette"></i>
+        <span>Themes</span>
+    </a>
+</li>
+{% endblock %}
+
+{% block top_nav_actions %}
+<div class="dropdown">
+    <button class="btn btn-light dropdown-toggle" type="button" id="notificationsDropdown" data-bs-toggle="dropdown">
+        <i class="fas fa-bell"></i>
+        {% if unread_notifications_count > 0 %}
+        <span class="badge bg-danger">{{ unread_notifications_count }}</span>
+        {% endif %}
+    </button>
+    <div class="dropdown-menu dropdown-menu-end notification-dropdown" style="width: 350px;">
+        <h6 class="dropdown-header">Recent Notifications</h6>
+        <div class="notification-list" style="max-height: 300px; overflow-y: auto;">
+            {% for notification in recent_notifications %}
+            <a class="dropdown-item notification-item {% if not notification.is_read %}unread{% endif %}" 
+               href="{% if notification.action_url %}{{ notification.action_url }}{% else %}#{% endif %}" 
+               data-id="{{ notification.id }}">
+                <div class="d-flex w-100 justify-content-between">
+                    <strong class="mb-1">{{ notification.title|truncatechars:30 }}</strong>
+                    <small>{{ notification.created_at|timesince }} ago</small>
+                </div>
+                <p class="mb-0 text-muted">{{ notification.message|truncatechars:50 }}</p>
+                {% if notification.business %}
+                <small><i class="fas fa-building me-1"></i>{{ notification.business.name }}</small>
+                {% endif %}
+            </a>
+            {% empty %}
+            <div class="dropdown-item text-center text-muted py-2">
+                <i class="fas fa-bell-slash mb-2"></i>
+                <p class="mb-0">No notifications</p>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="dropdown-divider"></div>
+        <a class="dropdown-item text-center" href="{% url 'notifications_view' %}">
+            <i class="fas fa-eye me-1"></i>View All Notifications
+        </a>
+    </div>
+</div>
+{% endblock %}

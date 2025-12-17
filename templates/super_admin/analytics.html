@@ -1,0 +1,582 @@
+<!-- templates/super_admin/analytics.html -->
+{% extends 'super_admin/base.html' %}
+{% load static %}
+
+{% block title %}Analytics - Super Admin{% endblock %}
+
+{% block page_title %}System Analytics{% endblock %}
+{% block page_subtitle %}Comprehensive insights and performance metrics{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <!-- Revenue Chart -->
+    <div class="col-xl-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Revenue Trends</h5>
+                <select class="form-select form-select-sm w-auto" id="revenuePeriod">
+                    <option value="7">Last 7 Days</option>
+                    <option value="30" selected>Last 30 Days</option>
+                    <option value="90">Last 90 Days</option>
+                    <option value="365">Last Year</option>
+                </select>
+            </div>
+            <div class="card-body">
+                <canvas id="revenueChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Top Businesses -->
+    <div class="col-xl-4">
+        <div class="card shadow h-100">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-trophy me-2"></i>Top Performing Businesses</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Business</th>
+                                <th>Revenue</th>
+                                <th>Growth</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for business in top_businesses %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0">
+                                            <i class="fas fa-building text-primary"></i>
+                                        </div>
+                                        <div class="flex-grow-1 ms-2">
+                                            <div class="fw-bold">{{ business.name|truncatechars:20 }}</div>
+                                            <small class="text-muted">{{ business.license.tier }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="fw-bold">KSh {{ business.revenue|floatformat:0 }}</td>
+                                <td>
+                                    <span class="badge {% if business.growth >= 0 %}bg-success{% else %}bg-danger{% endif %}">
+                                        {% if business.growth >= 0 %}+{% endif %}{{ business.growth|floatformat:1 }}%
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Second Row -->
+<div class="row mb-4">
+    <!-- User Growth -->
+    <div class="col-xl-4">
+        <div class="card shadow">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-users me-2"></i>User Growth</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="userGrowthChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- License Distribution -->
+    <div class="col-xl-4">
+        <div class="card shadow">
+            <div class="card-header bg-warning text-white">
+                <h5 class="mb-0"><i class="fas fa-key me-2"></i>License Distribution</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="licenseDistributionChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Stats -->
+    <div class="col-xl-4">
+        <div class="card shadow">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Quick Stats</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <div class="stat-card">
+                            <div class="stat-icon bg-primary">
+                                <i class="fas fa-shopping-cart"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-number">{{ stats.total_sales }}</div>
+                                <div class="stat-label">Total Sales</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="stat-card">
+                            <div class="stat-icon bg-success">
+                                <i class="fas fa-money-bill-wave"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-number">KSh {{ stats.total_revenue|floatformat:0 }}</div>
+                                <div class="stat-label">Total Revenue</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="stat-card">
+                            <div class="stat-icon bg-info">
+                                <i class="fas fa-user-plus"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-number">{{ stats.new_users }}</div>
+                                <div class="stat-label">New Users (30d)</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="stat-card">
+                            <div class="stat-icon bg-warning">
+                                <i class="fas fa-building"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-number">{{ stats.new_businesses }}</div>
+                                <div class="stat-label">New Businesses (30d)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Third Row - Detailed Reports -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>Detailed Reports</h5>
+                <div>
+                    <button class="btn btn-light btn-sm me-2" id="exportReportBtn">
+                        <i class="fas fa-download me-1"></i>Export Report
+                    </button>
+                    <button class="btn btn-light btn-sm" id="refreshAnalyticsBtn">
+                        <i class="fas fa-sync-alt me-1"></i>Refresh
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="report-card">
+                            <h6><i class="fas fa-calendar-alt text-primary me-2"></i>Monthly Report</h6>
+                            <p class="text-muted">Summary for {{ current_month }}</p>
+                            <a href="#" class="btn btn-outline-primary btn-sm">View Report</a>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="report-card">
+                            <h6><i class="fas fa-chart-bar text-success me-2"></i>Business Performance</h6>
+                            <p class="text-muted">Top 10 businesses analysis</p>
+                            <a href="#" class="btn btn-outline-success btn-sm">View Report</a>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="report-card">
+                            <h6><i class="fas fa-exclamation-triangle text-warning me-2"></i>Expiring Licenses</h6>
+                            <p class="text-muted">{{ expiring_count }} licenses expiring soon</p>
+                            <a href="{% url 'manage_licenses' %}" class="btn btn-outline-warning btn-sm">View Licenses</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .stat-card {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        transition: transform 0.3s;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-3px);
+    }
+    
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        margin-right: 15px;
+    }
+    
+    .stat-number {
+        font-size: 1.5rem;
+        font-weight: bold;
+        line-height: 1;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+    
+    .report-card {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        height: 100%;
+        border-left: 4px solid var(--primary-color);
+    }
+    
+    .report-card h6 {
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+    
+    .report-card:nth-child(2) {
+        border-left-color: var(--success-color);
+    }
+    
+    .report-card:nth-child(3) {
+        border-left-color: var(--warning-color);
+    }
+</style>
+
+<!-- templates/super_admin/analytics.html - Update JavaScript section -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Revenue Chart with real data
+        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+        
+        // Prepare revenue data
+        const revenueDates = [
+            {% for item in revenue_data %}
+            "{{ item.date|date:'M d' }}"{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+        
+        const revenueAmounts = [
+            {% for item in revenue_data %}
+            {{ item.revenue }}{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+        
+        const revenueChart = new Chart(revenueCtx, {
+            type: 'line',
+            data: {
+                labels: revenueDates,
+                datasets: [{
+                    label: 'Daily Revenue (KSh)',
+                    data: revenueAmounts,
+                    borderColor: '#4e73df',
+                    backgroundColor: 'rgba(78, 115, 223, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#4e73df',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'Revenue: KSh ' + context.parsed.y.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return 'KSh ' + value.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // User Growth Chart with real data
+        const userGrowthCtx = document.getElementById('userGrowthChart').getContext('2d');
+        
+        const userMonths = [
+            {% for item in user_growth_data %}
+            "{{ item.month }}"{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+        
+        const userCounts = [
+            {% for item in user_growth_data %}
+            {{ item.count }}{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+        
+        const userGrowthChart = new Chart(userGrowthCtx, {
+            type: 'bar',
+            data: {
+                labels: userMonths,
+                datasets: [{
+                    label: 'New Users',
+                    data: userCounts,
+                    backgroundColor: '#36b9cc',
+                    borderColor: '#2c9faf',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+        
+        // License Distribution Chart with real data
+        const licenseCtx = document.getElementById('licenseDistributionChart').getContext('2d');
+        
+        const licenseLabels = [
+            {% for item in license_distribution %}
+            "{{ item.tier }}"{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+        
+        const licenseCounts = [
+            {% for item in license_distribution %}
+            {{ item.count }}{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+        
+        const licenseColors = {
+            'DEMO': '#6c757d',
+            'BASIC': '#4e73df',
+            'PRO': '#f6c23e',
+            'ENTERPRISE': '#e74a3b'
+        };
+        
+        const licenseBackgroundColors = licenseLabels.map(label => licenseColors[label] || '#999999');
+        
+        const licenseChart = new Chart(licenseCtx, {
+            type: 'doughnut',
+            data: {
+                labels: licenseLabels,
+                datasets: [{
+                    data: licenseCounts,
+                    backgroundColor: licenseBackgroundColors,
+                    borderColor: '#ffffff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = Math.round((value / total) * 100);
+                                return `${label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Period change - reload with new data
+        document.getElementById('revenuePeriod').addEventListener('change', function() {
+            const period = this.value;
+            const saveBtn = this;
+            const originalText = saveBtn.innerHTML;
+            saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+            saveBtn.disabled = true;
+            
+            // Fetch new data based on period
+            fetch(`/accounts/api/analytics/revenue/?period=${period}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Update chart with new data
+                    revenueChart.data.labels = data.labels;
+                    revenueChart.data.datasets[0].data = data.values;
+                    revenueChart.update();
+                    
+                    saveBtn.innerHTML = originalText;
+                    saveBtn.disabled = false;
+                    showToast('Chart updated', 'success');
+                })
+                .catch(error => {
+                    saveBtn.innerHTML = originalText;
+                    saveBtn.disabled = false;
+                    showToast('Error loading data', 'error');
+                });
+        });
+        
+        // Refresh analytics
+        document.getElementById('refreshAnalyticsBtn').addEventListener('click', function() {
+            const refreshBtn = this;
+            const originalText = refreshBtn.innerHTML;
+            refreshBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+            refreshBtn.disabled = true;
+            
+            // Reload page after fetching fresh data
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        });
+        
+        // Export report
+        document.getElementById('exportReportBtn').addEventListener('click', function() {
+            if (confirm('Export analytics report as CSV?')) {
+                const exportBtn = this;
+                const originalText = exportBtn.innerHTML;
+                exportBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+                exportBtn.disabled = true;
+                
+                fetch('/accounts/api/analytics/export/')
+                    .then(response => response.blob())
+                    .then(blob => {
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `analytics-report-${new Date().toISOString().split('T')[0]}.csv`;
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(a);
+                        
+                        exportBtn.innerHTML = originalText;
+                        exportBtn.disabled = false;
+                        showToast('Report exported successfully', 'success');
+                    })
+                    .catch(error => {
+                        exportBtn.innerHTML = originalText;
+                        exportBtn.disabled = false;
+                        showToast('Error exporting report', 'error');
+                    });
+            }
+        });
+        
+        // Animate stat counters
+        function animateCounter(element, target, duration = 2000) {
+            const start = parseInt(element.innerText.replace(/[^0-9]/g, '')) || 0;
+            const increment = target / (duration / 16);
+            let current = start;
+            
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    element.innerText = target.toLocaleString();
+                    clearInterval(timer);
+                } else {
+                    element.innerText = Math.floor(current).toLocaleString();
+                }
+            }, 16);
+        }
+        
+        // Start counters when in view
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const statNumber = entry.target.querySelector('.stat-number');
+                    if (statNumber) {
+                        const target = parseInt(statNumber.dataset.target) || 0;
+                        animateCounter(statNumber, target);
+                    }
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.5 });
+        
+        // Observe stat cards
+        document.querySelectorAll('.stat-card').forEach(card => {
+            observer.observe(card);
+        });
+        
+        // Set target values for counters
+        document.querySelectorAll('.stat-number').forEach(element => {
+            const currentText = element.innerText;
+            let target = 0;
+            
+            if (currentText.includes('KSh')) {
+                target = parseFloat(currentText.replace(/[^0-9.]/g, '')) * 1000;
+            } else {
+                target = parseInt(currentText.replace(/[^0-9]/g, '')) || 0;
+            }
+            
+            element.dataset.target = target;
+            element.innerText = '0';
+        });
+        
+        function showToast(message, type = 'info') {
+            const toastId = 'toast-' + Date.now();
+            const toastHtml = `
+                <div id="${toastId}" class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+                    <div class="toast show" role="alert">
+                        <div class="toast-header bg-${type} text-white">
+                            <strong class="me-auto">${type.charAt(0).toUpperCase() + type.slice(1)}</strong>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                        </div>
+                        <div class="toast-body">
+                            ${message}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', toastHtml);
+            
+            setTimeout(() => {
+                const toast = document.getElementById(toastId);
+                if (toast) toast.remove();
+            }, 5000);
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,118 @@
+<!-- templates/accounts/login.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Login - SaaS POS{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center align-items-center min-vh-100">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-cash-register fa-3x text-primary mb-3"></i>
+                        <h2 class="fw-bold text-primary">SaaS POS System</h2>
+                        <p class="text-muted">Login to your account</p>
+                    </div>
+                    
+                    {% if messages %}
+                    <div class="mb-3">
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <form method="post" action="{% url 'login' %}">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="username" class="form-label">
+                                <i class="fas fa-user me-1"></i>Username or Email
+                            </label>
+                            <input type="text" 
+                                   class="form-control form-control-lg" 
+                                   id="username" 
+                                   name="username" 
+                                   required
+                                   placeholder="Enter your username or email"
+                                   autofocus>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="password" class="form-label">
+                                <i class="fas fa-lock me-1"></i>Password
+                            </label>
+                            <input type="password" 
+                                   class="form-control form-control-lg" 
+                                   id="password" 
+                                   name="password" 
+                                   required
+                                   placeholder="Enter your password">
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="remember_me" name="remember_me">
+                            <label class="form-check-label" for="remember_me">Remember me</label>
+                        </div>
+                        
+                        <div class="d-grid gap-2 mb-3">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-sign-in-alt me-2"></i>Login to Dashboard
+                            </button>
+                        </div>
+                        
+                        <div class="text-center">
+                            <p class="mb-1">
+                                Need access? Contact your system administrator
+                            </p>
+                            <p class="mb-0">
+                                <a href="#" class="text-decoration-none">Forgot your password?</a>
+                            </p>
+                        </div>
+                    </form>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="text-center">
+                        <small class="text-muted">
+                            <i class="fas fa-shield-alt me-1"></i>
+                            Secure SaaS POS System - Version 1.0
+                        </small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-3">
+                <small class="text-muted">
+                    &copy; {% now "Y" %} SaaS POS System. All rights reserved.
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .min-vh-100 {
+        min-height: 100vh;
+    }
+    .card {
+        border-radius: 15px;
+        border: none;
+    }
+    .btn-primary {
+        background: linear-gradient(135deg, #4361ee 0%, #3f37c9 100%);
+        border: none;
+        padding: 12px;
+    }
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #3f37c9 0%, #4361ee 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(63, 55, 201, 0.3);
+    }
+</style>
+{% endblock %}

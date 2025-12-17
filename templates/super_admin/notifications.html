@@ -1,0 +1,268 @@
+<!-- templates/super_admin/notifications.html -->
+{% extends 'super_admin/base.html' %}
+{% load static %}
+
+{% block title %}Notifications - Super Admin{% endblock %}
+
+{% block page_title %}Notifications{% endblock %}
+{% block page_subtitle %}Manage system notifications{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-bell me-2"></i>System Notifications</h5>
+                <div>
+                    <button class="btn btn-light btn-sm me-2" id="markAllRead">
+                        <i class="fas fa-check-double me-1"></i>Mark All Read
+                    </button>
+                    <button class="btn btn-light btn-sm" id="clearAll">
+                        <i class="fas fa-trash me-1"></i>Clear All
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="notifications-list">
+                    {% for notification in notifications %}
+                    <div class="notification-item {% if not notification.is_read %}unread{% endif %}" 
+                         data-id="{{ notification.id }}">
+                        <div class="notification-icon">
+                            <i class="fas fa-{{ notification.get_icon }} text-{{ notification.get_color }}"></i>
+                        </div>
+                        <div class="notification-content">
+                            <div class="notification-header">
+                                <h6 class="mb-1">{{ notification.title }}</h6>
+                                <small class="text-muted">{{ notification.created_at|timesince }} ago</small>
+                            </div>
+                            <p class="mb-2">{{ notification.message }}</p>
+                            {% if notification.business %}
+                            <small class="text-muted">
+                                <i class="fas fa-building"></i> {{ notification.business.name }}
+                            </small>
+                            {% endif %}
+                            {% if notification.action_url %}
+                            <div class="mt-2">
+                                <a href="{{ notification.action_url }}" class="btn btn-sm btn-outline-primary">
+                                    {{ notification.action_text|default:"View Details" }}
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="notification-actions">
+                            {% if not notification.is_read %}
+                            <button class="btn btn-sm btn-outline-success mark-read" title="Mark as read">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            {% endif %}
+                            <button class="btn btn-sm btn-outline-danger delete-notification" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+                        <h5>No notifications</h5>
+                        <p class="text-muted">You're all caught up!</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .notification-item {
+        display: flex;
+        padding: 15px;
+        border-bottom: 1px solid #dee2e6;
+        transition: background-color 0.3s;
+    }
+    
+    .notification-item.unread {
+        background-color: rgba(0, 123, 255, 0.05);
+        border-left: 3px solid var(--primary-color);
+    }
+    
+    .notification-item:hover {
+        background-color: rgba(0, 0, 0, 0.02);
+    }
+    
+    .notification-icon {
+        width: 40px;
+        height: 40px;
+        background: #f8f9fa;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+        font-size: 1.2rem;
+    }
+    
+    .notification-content {
+        flex: 1;
+    }
+    
+    .notification-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+    
+    .notification-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        margin-left: 15px;
+    }
+    
+    .notification-item:last-child {
+        border-bottom: none;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Mark notification as read
+        document.querySelectorAll('.mark-read').forEach(button => {
+            button.addEventListener('click', function() {
+                const notificationItem = this.closest('.notification-item');
+                const notificationId = notificationItem.getAttribute('data-id');
+                
+                // Send request to mark as read
+                fetch(`/accounts/api/notification/${notificationId}/mark-read/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        notificationItem.classList.remove('unread');
+                        this.remove();
+                        updateNotificationBadge();
+                    }
+                });
+            });
+        });
+        
+        // Delete notification
+        document.querySelectorAll('.delete-notification').forEach(button => {
+            button.addEventListener('click', function() {
+                const notificationItem = this.closest('.notification-item');
+                const notificationId = notificationItem.getAttribute('data-id');
+                
+                if (confirm('Delete this notification?')) {
+                    fetch(`/accounts/api/notification/${notificationId}/delete/`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRFToken': getCookie('csrftoken')
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.success) {
+                            notificationItem.remove();
+                            updateNotificationBadge();
+                            
+                            // If no notifications left, show empty state
+                            if (!document.querySelector('.notification-item')) {
+                                document.querySelector('.notifications-list').innerHTML = `
+                                    <div class="text-center py-5">
+                                        <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+                                        <h5>No notifications</h5>
+                                        <p class="text-muted">You're all caught up!</p>
+                                    </div>
+                                `;
+                            }
+                        }
+                    });
+                }
+            });
+        });
+        
+        // Mark all as read
+        document.getElementById('markAllRead').addEventListener('click', function() {
+            if (confirm('Mark all notifications as read?')) {
+                fetch('/accounts/api/notifications/mark-all-read/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        document.querySelectorAll('.notification-item').forEach(item => {
+                            item.classList.remove('unread');
+                        });
+                        document.querySelectorAll('.mark-read').forEach(btn => btn.remove());
+                        updateNotificationBadge();
+                    }
+                });
+            }
+        });
+        
+        // Clear all notifications
+        document.getElementById('clearAll').addEventListener('click', function() {
+            if (confirm('Clear all notifications? This cannot be undone.')) {
+                fetch('/accounts/api/notifications/clear-all/', {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        document.querySelector('.notifications-list').innerHTML = `
+                            <div class="text-center py-5">
+                                <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+                                <h5>No notifications</h5>
+                                <p class="text-muted">You're all caught up!</p>
+                            </div>
+                        `;
+                        updateNotificationBadge();
+                    }
+                });
+            }
+        });
+        
+        // Update notification badge in navbar
+        function updateNotificationBadge() {
+            const unreadCount = document.querySelectorAll('.notification-item.unread').length;
+            const badge = document.querySelector('#notificationsDropdown .badge');
+            if (badge) {
+                badge.textContent = unreadCount;
+                if (unreadCount === 0) {
+                    badge.classList.add('d-none');
+                } else {
+                    badge.classList.remove('d-none');
+                }
+            }
+        }
+        
+        // Get CSRF token helper
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+</script>
+{% endblock %}
